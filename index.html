@@ -1,0 +1,3771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRISM - Text to Visuals</title>
+    <link rel="icon" type="image/png" href="res/prism-logo.png">
+    <style>
+        :root {
+            /* Business Theme (Default) */
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --text-color: #222;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9f9f9;
+            --border-color: #ccc;
+            --border-radius-sm: 6px;
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+            --accent-color: #667eea;
+            --spacing-sm: 8px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 30px;
+            --box-shadow-md: 0 20px 60px rgba(0, 0, 0, 0.3);
+            --box-shadow-sm: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .theme-geek:root {
+            /* Geek Theme Overrides */
+            --primary-color: #00ff9f;
+            --secondary-color: #00cc88;
+            --text-color: #00ff9f;
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --border-color: #00ff9f;
+            --accent-color: #00ff9f;
+            --box-shadow-sm: 0 0 0 3px rgba(0, 255, 159, 0.2);
+            --font-family: 'Courier New', monospace;
+        }
+
+        .theme-geek {
+            --primary-color: #00ff9f;
+            --secondary-color: #00cc88;
+            --text-color: #00ff9f;
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --border-color: #00ff9f;
+            --accent-color: #00ff9f;
+            --box-shadow-sm: 0 0 0 3px rgba(0, 255, 159, 0.2);
+            --font-family: 'Courier New', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            padding: 0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 100%;
+            width: 100%;
+            background: var(--bg-primary);
+            border-radius: 0;
+            box-shadow: none;
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: var(--bg-primary);
+            padding: 12px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .header img {
+            height: 60px;
+            flex-shrink: 0;
+        }
+
+        .header-text {
+            flex: 1;
+        }
+
+        .header h1 {
+            font-size: 1.2em;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header-theme {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-shrink: 0;
+            width: 100%;
+        }
+
+        .header-theme label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .header-theme input[type="radio"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        .tagline {
+            font-size: 0.8em;
+            font-weight: 300;
+            opacity: 0.9;
+            font-style: italic;
+            margin: 0;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px 0;
+            flex: 1;
+        }
+
+        .section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 8px;
+            padding: 0 20px;
+        }
+
+        .section:first-child {
+            margin-bottom: 5px;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .section:last-child {
+            margin-top: 5px;
+            flex: 1;
+            min-height: 200px;
+        }
+
+        .section h2 {
+            font-size: 0.95em;
+            margin: 0;
+            color: var(--text-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        textarea {
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            font-family: inherit;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s;
+            background: var(--bg-primary);
+            color: var(--text-color);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: var(--box-shadow-sm);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            margin-bottom: 0;
+            justify-content: center;
+        }
+
+        button {
+            padding: 8px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .button-group .btn-primary {
+            flex: 0 1 auto;
+            width: 140px;
+        }
+
+        .button-group .btn-secondary {
+            flex: 0 1 auto;
+            width: 100px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+            color: var(--bg-primary);
+        }
+
+        #output {
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: 15px 20px;
+            min-height: 350px;
+            background: var(--bg-secondary);
+            overflow-y: auto;
+            overflow-x: auto;
+            flex: 1;
+            width: 100%;
+            color: var(--text-color);
+            margin: 0 20px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--primary-color);
+            font-size: 18px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: #e74c3c;
+            padding: 15px;
+            background: #fadbd8;
+            border-radius: var(--border-radius-md);
+            border-left: 4px solid #e74c3c;
+        }
+
+        .success-output {
+            color: var(--text-color);
+        }
+
+        .success-output h2 {
+            color: var(--primary-color);
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        .success-output p {
+            margin: 15px 0;
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        .success-output ul {
+            margin: 15px 0 15px 20px;
+            line-height: 1.8;
+        }
+
+        .success-output li {
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .section-block {
+            margin: 20px 0;
+            padding: 15px;
+            background: var(--bg-primary);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .section-block h3 {
+            color: var(--primary-color);
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .section-block ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .section-block li {
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            #output {
+                min-height: 150px;
+            }
+
+            .button-group {
+                flex-wrap: wrap;
+            }
+
+            .button-group .btn-primary,
+            .button-group .btn-secondary {
+                width: 100%;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        .controls-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .viz-selector,
+        .appearance-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .viz-selector label,
+        .appearance-selector label {
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 12px;
+        }
+
+        .viz-selector select,
+        .appearance-selector select {
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            font-size: 12px;
+            background: var(--bg-primary);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .viz-selector select option,
+        .appearance-selector select option {
+            background: var(--bg-primary);
+            color: var(--text-color);
+        }
+
+        .viz-selector select:focus,
+        .appearance-selector select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* Card-based visualization selector */
+        .viz-selector-section {
+            padding: 12px 15px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .viz-card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+            width: 100%;
+        }
+
+        /* Info Popup */
+        .viz-info-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-primary);
+            border: 2px solid var(--primary-color);
+            border-radius: var(--border-radius-lg);
+            padding: 20px;
+            max-width: 300px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+        }
+
+        .viz-info-popup.visible {
+            display: block;
+            animation: popupSlide 0.3s ease;
+        }
+
+        @keyframes popupSlide {
+            from {
+                transform: translate(-50%, -45%);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%);
+                opacity: 1;
+            }
+        }
+
+        .viz-info-popup-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .viz-info-popup-icon {
+            font-size: 20px;
+        }
+
+        .viz-info-popup-usage {
+            font-size: 13px;
+            color: var(--text-color);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .viz-info-popup-output {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .viz-info-popup-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 12px 0;
+        }
+
+        .viz-info-popup-details {
+            font-size: 12px;
+            color: var(--text-color);
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        .viz-info-popup-close {
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-color);
+            opacity: 0.6;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            transition: opacity 0.2s;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .viz-info-popup-close:hover {
+            opacity: 1;
+        }
+
+        /* Overlay for popup */
+        .viz-info-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 999;
+            display: none;
+        }
+
+        .viz-info-overlay.visible {
+            display: block;
+        }
+
+        .viz-card {
+            padding: 10px 6px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            min-height: 80px;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        /* Category-based color coding */
+        .viz-card[data-category="Insight"] {
+            background: rgba(102, 126, 234, 0.05);
+            border-color: rgba(102, 126, 234, 0.4);
+        }
+
+        .viz-card[data-category="Planning"] {
+            background: rgba(76, 175, 80, 0.05);
+            border-color: rgba(76, 175, 80, 0.4);
+        }
+
+        .viz-card[data-category="Business"] {
+            background: rgba(255, 193, 7, 0.05);
+            border-color: rgba(255, 193, 7, 0.4);
+        }
+
+        .viz-card[data-category="Tech"] {
+            background: rgba(139, 69, 19, 0.08);
+            border-color: rgba(139, 69, 19, 0.5);
+        }
+
+        .viz-card[data-category="Story"] {
+            background: rgba(233, 30, 99, 0.05);
+            border-color: rgba(233, 30, 99, 0.4);
+        }
+
+        .viz-card[data-category="Incident"] {
+            background: rgba(244, 67, 54, 0.05);
+            border-color: rgba(244, 67, 54, 0.4);
+        }
+
+        .viz-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.2);
+            transform: scale(1.02);
+        }
+
+        .viz-card.selected {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: var(--bg-primary);
+            transform: scale(1.03);
+        }
+
+        .viz-card.selected .viz-card-title,
+        .viz-card.selected .viz-card-category {
+            color: var(--bg-primary);
+        }
+
+        .viz-card-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--primary-color);
+            stroke-width: 2;
+        }
+
+        .viz-card.selected .viz-card-icon {
+            color: #ffffff;
+            stroke-width: 2.5;
+            filter: brightness(1.2) drop-shadow(0 0 3px rgba(255, 255, 255, 0.9));
+        }
+
+        .viz-card-title {
+            font-weight: 600;
+            font-size: 10px;
+            color: var(--text-color);
+            line-height: 1.2;
+            word-break: break-word;
+            max-height: 24px;
+            overflow: hidden;
+        }
+
+        .viz-card-category {
+            font-size: 8px;
+            font-weight: 500;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .viz-card.selected .viz-card-category {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .viz-card-info-btn {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            background: none;
+            border: none;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+        }
+
+        .viz-card:hover .viz-card-info-btn {
+            opacity: 1;
+        }
+
+        /* Responsive grid */
+        @media (max-width: 768px) {
+            .viz-card-container {
+                grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            }
+
+            .viz-card {
+                min-height: 75px;
+                padding: 8px 4px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .viz-card-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Geek theme card adjustments */
+        .theme-geek .viz-card {
+            border-color: var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .theme-geek .viz-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 12px rgba(0, 255, 159, 0.2);
+        }
+
+        .theme-geek .viz-card.selected .viz-card-title,
+        .theme-geek .viz-card.selected .viz-card-category {
+            color: #000000;
+        }
+
+        /* Theme: Businessy (default) */
+        /* All theme colors are now handled via CSS variables above */
+
+        .viz-type-badge {
+            display: inline-block;
+            background: var(--bg-secondary);
+            color: var(--primary-color);
+            padding: 8px 14px;
+            border-radius: var(--border-radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .recommendation-chips {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .recommendation-chips label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .chip {
+            display: inline-block;
+            padding: 8px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            background: var(--bg-primary);
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .chip:hover {
+            border-color: var(--primary-color);
+            background: var(--bg-secondary);
+        }
+
+        .chip.selected {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .node-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        .node {
+            background: var(--bg-primary);
+            border: 2px solid var(--primary-color);
+            border-radius: var(--border-radius-md);
+            padding: 16px 24px;
+            text-align: center;
+            color: var(--text-color);
+            font-weight: 600;
+            min-width: 200px;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .node-heading {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+        }
+
+        .node-item {
+            background: var(--bg-secondary);
+            border-color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .node-connector {
+            height: 20px;
+            width: 2px;
+            background: var(--primary-color);
+            margin: 0;
+        }
+
+        .node-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        .node-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .matrix-quadrant {
+            border: 2px solid var(--primary-color);
+            border-radius: var(--border-radius-md);
+            padding: 20px;
+            background: var(--bg-secondary);
+            min-height: 200px;
+        }
+
+        .matrix-quadrant h3 {
+            color: var(--primary-color);
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        .matrix-quadrant ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .matrix-quadrant li {
+            color: var(--text-color);
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        .matrix-quadrant li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .todo-list {
+            margin-top: 30px;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: var(--bg-primary);
+            border-left: 3px solid var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .todo-item input[type="checkbox"] {
+            margin-top: 4px;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .todo-item.checked {
+            opacity: 0.6;
+        }
+
+        .todo-item.checked .todo-text {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .todo-text {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: var(--border-radius-lg);
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
+        .priority-high {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef5350;
+        }
+
+        .priority-medium {
+            background: #fff3e0;
+            color: #e65100;
+            border: 1px solid #ffb74d;
+        }
+
+        .priority-low {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #81c784;
+        }
+
+        .lean-canvas {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .canvas-box {
+            border: 2px solid var(--primary-color);
+            border-radius: var(--border-radius-md);
+            padding: 12px;
+            background: var(--bg-secondary);
+            display: flex;
+            flex-direction: column;
+            min-height: 180px;
+        }
+
+        .canvas-section {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--primary-color);
+        }
+
+        .canvas-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .canvas-box h3 {
+            color: var(--primary-color);
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .canvas-box-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .canvas-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .canvas-box li {
+            color: var(--text-color);
+            margin-bottom: 4px;
+            padding-left: 15px;
+            position: relative;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        .canvas-box li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+        }
+
+        .canvas-box p {
+            color: var(--text-color);
+            font-size: 12px;
+            line-height: 1.3;
+            margin: 0;
+        }
+
+        .canvas-col-1 { grid-column: 1; }
+        .canvas-col-2 { grid-column: 2; }
+        .canvas-col-3 { grid-column: 3; }
+        .canvas-col-4 { grid-column: 4; }
+        .canvas-col-5 { grid-column: 5; }
+
+        .canvas-bottom {
+            grid-column: 1 / 6;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="vizInfoOverlay" class="viz-info-overlay"></div>
+    <div id="vizInfoPopup" class="viz-info-popup">
+        <button class="viz-info-popup-close" onclick="closeVizInfo()">✕</button>
+        <div class="viz-info-popup-title">
+            <span class="viz-info-popup-icon" id="popupIcon">💡</span>
+            <span id="popupTitle">Clarity View</span>
+        </div>
+        <div class="viz-info-popup-usage" id="popupUsage">Extract key points and structure</div>
+        <div class="viz-info-popup-output" id="popupOutput">Summary, key points, sections</div>
+        <div class="viz-info-popup-divider"></div>
+        <div class="viz-info-popup-details" id="popupDetails">Best for distilling complex information into clear, actionable insights.</div>
+    </div>
+
+    <div class="container theme-geek" id="app">
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 20px; flex: 1;">
+                <img src="res/prism-logo.png" alt="PRISM Logo">
+                <div class="header-text">
+                    <h1>PRISM</h1>
+                    <p class="tagline" id="tagline">Transforming words into wisdom</p>
+                </div>
+            </div>
+            <div class="header-theme">
+                <label><input type="radio" name="theme" value="theme-business"> Businessy</label>
+                <label><input type="radio" name="theme" value="theme-geek" checked> Geeky</label>
+            </div>
+        </div>
+
+        <div class="viz-selector-section">
+            <div class="viz-card-container">
+                <div class="viz-card" data-value="clarity-view" data-category="Insight" data-info="Extract key points and structure|Summary, key points, sections" data-details="Best for distilling complex information into clear, actionable insights. Extracts main ideas, supporting points, and organizational structure. Great for documentation, research, or dense text.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><rect x="6" y="6" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" rx="2"/><line x1="10" y1="12" x2="30" y2="12" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="18" x2="30" y2="18" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="24" x2="30" y2="24" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="30" x2="25" y2="30" stroke="currentColor" stroke-width="1.5"/></svg>
+                    <div class="viz-card-title">Clarity View</div>
+                    <div class="viz-card-category">Insight</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="clarity-plus" data-category="Insight" data-info="Consultant-style visual brief|Hero section + structured insights" data-details="Executive presentation format with hero headline, metrics, highlights, and recommendations. Ideal for C-suite briefs, strategic insights, and polished stakeholder communication. Emphasizes what matters most.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><circle cx="20" cy="20" r="14" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M20,10 L28,28 L12,28 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="20" cy="20" r="2" fill="currentColor"/></svg>
+                    <div class="viz-card-title">Clarity Lite</div>
+                    <div class="viz-card-category">Insight</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="node-view" data-category="Insight" data-info="Map connections and relationships|Connected nodes with links" data-details="Visualizes entities and their connections as an interactive graph. Ideal for understanding how concepts, people, or systems relate. Use for relationship mapping, knowledge graphs, or dependency analysis.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><circle cx="20" cy="12" r="3" fill="currentColor"/><circle cx="12" cy="24" r="3" fill="currentColor"/><circle cx="20" cy="24" r="3" fill="currentColor"/><circle cx="28" cy="24" r="3" fill="currentColor"/><line x1="20" y1="15" x2="12" y2="21" stroke="currentColor" stroke-width="1.5"/><line x1="20" y1="15" x2="20" y2="21" stroke="currentColor" stroke-width="1.5"/><line x1="20" y1="15" x2="28" y2="21" stroke="currentColor" stroke-width="1.5"/></svg>
+                    <div class="viz-card-title">Node View</div>
+                    <div class="viz-card-category">Insight</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="matrix-view" data-category="Planning" data-info="Prioritize by impact & feasibility|2x2 matrix with quadrants" data-details="Evaluates options using two dimensions (impact vs feasibility, urgency vs importance, etc). Helps prioritize initiatives and make strategic decisions. Essential for roadmapping and resource allocation.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><rect x="8" y="8" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="20" y="8" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="8" y="20" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="20" y="20" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="14" y="14" font-size="8" fill="currentColor" text-anchor="middle" dominant-baseline="middle">✓</text></svg>
+                    <div class="viz-card-title">Matrix View</div>
+                    <div class="viz-card-category">Planning</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="todo-list" data-category="Planning" data-info="Extract and prioritize tasks|Tasks with priority levels" data-details="Breaks down goals into actionable, ranked tasks. Assigns priority levels (High/Medium/Low) to help focus efforts. Perfect for project planning, sprint planning, and execution tracking.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><rect x="8" y="8" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" rx="2"/><circle cx="12" cy="14" r="2" fill="currentColor"/><line x1="16" y1="14" x2="28" y2="14" stroke="currentColor" stroke-width="1"/><circle cx="12" cy="20" r="2" fill="currentColor"/><line x1="16" y1="20" x2="28" y2="20" stroke="currentColor" stroke-width="1"/><circle cx="12" cy="26" r="2" fill="currentColor"/><line x1="16" y1="26" x2="28" y2="26" stroke="currentColor" stroke-width="1"/></svg>
+                    <div class="viz-card-title">To-Do List</div>
+                    <div class="viz-card-category">Planning</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="mind-map" data-category="Planning" data-info="Explore hierarchical concepts|Tree structure with branches" data-details="Organizes ideas in a branching, non-linear structure. Shows relationships between main topics and subtopics. Great for brainstorming, learning, complex problem decomposition, or expanding on ideas.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><circle cx="20" cy="8" r="2.5" fill="currentColor"/><circle cx="10" cy="16" r="2.5" fill="currentColor"/><circle cx="20" cy="16" r="2.5" fill="currentColor"/><circle cx="30" cy="16" r="2.5" fill="currentColor"/><circle cx="8" cy="26" r="2.5" fill="currentColor"/><circle cx="16" cy="26" r="2.5" fill="currentColor"/><circle cx="24" cy="26" r="2.5" fill="currentColor"/><circle cx="32" cy="26" r="2.5" fill="currentColor"/><line x1="20" y1="10.5" x2="10" y2="13.5" stroke="currentColor" stroke-width="1"/><line x1="20" y1="10.5" x2="20" y2="13.5" stroke="currentColor" stroke-width="1"/><line x1="20" y1="10.5" x2="30" y2="13.5" stroke="currentColor" stroke-width="1"/></svg>
+                    <div class="viz-card-title">Mind Map</div>
+                    <div class="viz-card-category">Planning</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="timeline-view" data-category="Planning" data-info="Sequence work into phases|Gantt-style project timeline" data-details="Converts project descriptions into polished timeline visualizations with phases, milestones, dependencies, and workstreams. Shows delivery sequencing and critical risks. Perfect for program management, roadmaps, and transformation initiatives.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><line x1="6" y1="12" x2="34" y2="12" stroke="currentColor" stroke-width="1.5"/><rect x="8" y="10" width="8" height="4" fill="currentColor"/><rect x="18" y="10" width="8" height="4" fill="currentColor"/><rect x="28" y="10" width="5" height="4" fill="currentColor" opacity="0.5"/><line x1="10" y1="16" x2="10" y2="26" stroke="currentColor" stroke-width="1"/><line x1="20" y1="16" x2="20" y2="26" stroke="currentColor" stroke-width="1"/><line x1="30" y1="16" x2="30" y2="26" stroke="currentColor" stroke-width="1"/><line x1="6" y1="26" x2="34" y2="26" stroke="currentColor" stroke-width="1"/></svg>
+                    <div class="viz-card-title">Timeline View</div>
+                    <div class="viz-card-category">Planning</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="lean-canvas" data-category="Business" data-info="Plan a business or product|9-block canvas" data-details="Lightweight one-page business model covering customer segments, value props, channels, revenue, costs, and metrics. Faster than traditional business plans. Ideal for startups and new initiatives.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><rect x="8" y="8" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1"/><line x1="16" y1="8" x2="16" y2="32" stroke="currentColor" stroke-width="1"/><line x1="24" y1="8" x2="24" y2="32" stroke="currentColor" stroke-width="1"/><line x1="8" y1="16" x2="32" y2="16" stroke="currentColor" stroke-width="1"/><line x1="8" y1="24" x2="32" y2="24" stroke="currentColor" stroke-width="1"/></svg>
+                    <div class="viz-card-title">Lean Canvas</div>
+                    <div class="viz-card-category">Business</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="earnings-snapshot" data-category="Business" data-info="Analyze earnings reports for investors|Key metrics, trends, risks" data-details="Converts earnings reports into consulting-style summaries for average investors. Extracts key metrics, financial highlights, performance drivers, and outlook. Perfect for quick earnings analysis and investment decisions.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><rect x="6" y="8" width="28" height="26" fill="none" stroke="currentColor" stroke-width="1.5" rx="2"/><polyline points="10,24 14,16 18,20 26,8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="26" cy="8" r="2" fill="currentColor"/><line x1="6" y1="30" x2="34" y2="30" stroke="currentColor" stroke-width="1"/></svg>
+                    <div class="viz-card-title">Earnings Snapshot</div>
+                    <div class="viz-card-category">Business</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="golden-circle" data-category="Business" data-info="Understand purpose and impact|Why-What-How circles" data-details="Organizes messaging around WHY (purpose/belief), WHAT (offering), and HOW (implementation). Based on Simon Sinek's framework. Powerful for brands, pitches, and communicating organizational purpose.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><circle cx="20" cy="20" r="12" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="20" cy="20" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="20" cy="20" r="2.5" fill="currentColor"/></svg>
+                    <div class="viz-card-title">Golden Circle</div>
+                    <div class="viz-card-category">Business</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="reflective-model" data-category="Business" data-info="Learn from experience|What-So What-Now What" data-details="Structured reflection framework: WHAT (describe situation), SO WHAT (implications/insights), NOW WHAT (actions/changes). Ideal for after-action reviews, lesson capture, and continuous improvement.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><circle cx="12" cy="14" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="20" cy="22" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="28" cy="14" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="12" y="16" font-size="6" fill="currentColor" text-anchor="middle" dominant-baseline="middle">W</text><text x="20" y="24" font-size="6" fill="currentColor" text-anchor="middle" dominant-baseline="middle">SW</text><text x="28" y="16" font-size="6" fill="currentColor" text-anchor="middle" dominant-baseline="middle">NW</text></svg>
+                    <div class="viz-card-title">Reflective Model</div>
+                    <div class="viz-card-category">Business</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="tech-arch-diagram" data-category="Tech" data-info="Map system architecture|Nodes, connections, legend" data-details="Converts technical descriptions into polished architecture diagrams. Visualizes system components, interactions, and dependencies. Includes nodes with emojis, connections, and a legend. Perfect for system design, infrastructure planning, and technical documentation.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><rect x="4" y="4" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" rx="2"/><rect x="20" y="4" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" rx="2"/><rect x="12" y="20" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" rx="2"/><line x1="10" y1="16" x2="18" y2="20" stroke="currentColor" stroke-width="1"/><line x1="26" y1="16" x2="18" y2="20" stroke="currentColor" stroke-width="1"/></svg>
+                    <div class="viz-card-title">Tech Architecture</div>
+                    <div class="viz-card-category">Tech</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="flowchart" data-category="Tech" data-info="Visualize processes and logic|Connected flow boxes" data-details="Maps sequential steps, decision points, and outcomes in a process. Shows control flow, conditions, and branching logic. Essential for documenting workflows, algorithms, and system processes.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><rect x="6" y="10" width="12" height="8" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="22" y="10" width="12" height="8" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="24" width="12" height="8" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="12" y1="18" x2="12" y2="22" stroke="currentColor" stroke-width="1.5"/><line x1="12" y1="22" x2="20" y2="22" stroke="currentColor" stroke-width="1.5"/><line x1="28" y1="18" x2="28" y2="22" stroke="currentColor" stroke-width="1.5"/><line x1="28" y1="22" x2="20" y2="22" stroke="currentColor" stroke-width="1.5"/><polygon points="12,22 10,24 14,24" fill="currentColor"/><polygon points="28,22 26,24 30,24" fill="currentColor"/></svg>
+                    <div class="viz-card-title">Flowchart</div>
+                    <div class="viz-card-category">Tech</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="uml-sequence" data-category="Tech" data-info="Show actor interactions over time|Timeline with messages" data-details="Illustrates how components, services, or actors interact and exchange messages over time. Shows temporal ordering and synchronization. Perfect for API designs, system interactions, and protocol documentation.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><circle cx="10" cy="8" r="2" fill="currentColor"/><circle cx="20" cy="8" r="2" fill="currentColor"/><circle cx="30" cy="8" r="2" fill="currentColor"/><line x1="10" y1="10" x2="10" y2="32" stroke="currentColor" stroke-width="1"/><line x1="20" y1="10" x2="20" y2="32" stroke="currentColor" stroke-width="1"/><line x1="30" y1="10" x2="30" y2="32" stroke="currentColor" stroke-width="1"/><line x1="10" y1="16" x2="20" y2="18" stroke="currentColor" stroke-width="1"/><line x1="20" y1="22" x2="30" y2="24" stroke="currentColor" stroke-width="1"/><line x1="30" y1="28" x2="10" y2="30" stroke="currentColor" stroke-width="1"/></svg>
+                    <div class="viz-card-title">UML Sequence</div>
+                    <div class="viz-card-category">Tech</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+
+                <div class="viz-card" data-value="incident-postmortem" data-category="Tech" data-info="Analyze incidents without blame|Timeline, 5 Whys, action items" data-details="Structured incident analysis focusing on systems and processes, not people. Includes timeline, root cause via 5 Whys, impact assessment, and action items. Builds organizational resilience without blame.">
+                    <svg class="viz-card-icon" viewBox="0 0 40 40"><polygon points="20,4 28,12 28,36 12,36 12,12" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M 20 4 L 28 12" stroke="currentColor" stroke-width="1.5"/><circle cx="20" cy="16" r="3" fill="currentColor"/><line x1="14" y1="24" x2="26" y2="24" stroke="currentColor" stroke-width="1"/><line x1="14" y1="28" x2="26" y2="28" stroke="currentColor" stroke-width="1"/><line x1="14" y1="32" x2="26" y2="32" stroke="currentColor" stroke-width="1"/></svg>
+                    <div class="viz-card-title">Incident Postmortem</div>
+                    <div class="viz-card-category">Tech</div>
+                    <div class="viz-card-info-btn">ℹ️</div>
+                </div>
+            </div>
+
+            <!-- Hidden select for backward compatibility -->
+            <select id="vizType" style="display: none;">
+                <option value="clarity-view" selected>Clarity View</option>
+                <option value="clarity-plus">Clarity Lite</option>
+                <option value="node-view">Node View</option>
+                <option value="matrix-view">Matrix View (2x2)</option>
+                <option value="todo-list">To-Do List</option>
+                <option value="mind-map">Mind Map</option>
+                <option value="timeline-view">Timeline View</option>
+                <option value="lean-canvas">Lean Canvas</option>
+                <option value="earnings-snapshot">Earnings Snapshot</option>
+                <option value="flowchart">Flowchart</option>
+                <option value="uml-sequence">UML Sequence</option>
+                <option value="golden-circle">Golden Circle (Why-What-How)</option>
+                <option value="reflective-model">Reflective Model (What-So What-Now What)</option>
+                <option value="incident-postmortem">Incident Postmortem</option>
+                <option value="tech-arch-diagram">Technology Architecture Diagram</option>
+            </select>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2>📝 Input</h2>
+<textarea
+    id="inputText"
+    placeholder="Ask a question, paste a URL, or drop in a long paragraph to visualize...
+
+Examples:
+• 'Explain Circuit Breaker architecture using a Technology Diagram'
+• Paste an earnings report URL for a consultant-style summary
+• Paste an incident description for a Blameless Postmortem
+• Paste a complex topic for a Mind Map or Clarity View
+
+Supports:
+✓ Public URLs
+✓ Long-form text
+✓ Technical architecture descriptions
+✓ Incident timelines
+✓ Project plans
+
+Coming Soon:
+• Confluence Links
+• Jira Tickets
+• Google Docs
+• Slack Threads"
+>
+</textarea>
+                <div class="button-group">
+                    <button class="btn-primary" id="prismBtn">Render</button>
+                    <button class="btn-secondary" id="clearBtn">Clear</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>💡 Output</h2>
+                <div id="vizTypeBadge"></div>
+                <div id="output" class="empty-state">
+                    <p>Your structured insights will appear here...</p>
+                </div>
+                <div id="exportButtons" style="display: none; margin-top: 10px;">
+                    <button class="btn-secondary" id="exportBtn" style="width: 100%;">📄 Export as PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+    <script>
+        // ========== CONFIGURATION ==========
+
+        const CONFIG = {
+            api: {
+                baseUrl: "http://localhost:3000/api/messages",
+                urlFetchEndpoint: "http://localhost:3000/api/fetch",
+                model: "claude-opus-4-7",
+                version: "2023-06-01",
+                maxTokensRecommendation: 256,
+                maxTokensVisualization: 4096,
+                maxTokensVisualizationLarge: 8192
+            },
+            minTextLength: 10,
+            vizMinLength: 500
+        };
+
+        const VIZ_TYPES = {
+            'clarity-view': 'Clarity View',
+            'clarity-plus': 'Clarity Lite',
+            'node-view': 'Node View',
+            'matrix-view': 'Matrix View (2x2)',
+            'todo-list': 'To-Do List',
+            'mind-map': 'Mind Map',
+            'timeline-view': 'Timeline View',
+            'lean-canvas': 'Lean Canvas',
+            'earnings-snapshot': 'Earnings Snapshot',
+            'flowchart': 'Flowchart',
+            'uml-sequence': 'UML Sequence',
+            'golden-circle': 'Golden Circle',
+            'reflective-model': 'Reflective Model',
+            'incident-postmortem': 'Incident Postmortem',
+            'tech-arch-diagram': 'Technology Architecture Diagram'
+        };
+
+        const PROMPTS = {
+            recommendation: {
+                system: `You are a visualization recommendation engine. Analyze the text and recommend the best visualization types.
+
+Return JSON:
+
+{
+"recommended_visualizations": ["Clarity View", "Node View"]
+}
+
+Rules:
+* JSON only
+* Pick 1-3 best options based on content structure
+* Choose from: "Clarity View", "Node View", "Matrix View (2x2)", "To-Do List"`,
+                user: (text) => `Recommend visualization types for this text:\n\n${text.substring(0, 500)}`
+            },
+            visualization: {
+                base: `You are a clarity engine and structured thinking assistant. Convert the following text into organized, actionable insights.
+
+Also recommend the best visualization types for this content.`,
+                clarityPlus: `
+
+You are PRISM Clarity Plus — an AI consultant, information architect, and visual communication designer.
+
+Your job is NOT to summarize text. Your job is to:
+* Extract the most important insights
+* Structure them visually
+* Communicate them like a consultant presentation
+* Guide the frontend on HOW to render the output
+
+Think: McKinsey slide, executive brief, visual intelligence summary.
+
+Return ONLY JSON in this exact format:
+
+{
+"title": "",
+"subtitle": "",
+"layout": "stacked | two-column | hybrid",
+"hero": {
+"headline": "",
+"subheadline": "",
+"accent": "blue | green | purple | orange"
+},
+"sections": [
+{
+"type": "highlight",
+"title": "",
+"icon": "📈",
+"importance": "high | medium | low",
+"content": [""]
+},
+{
+"type": "metrics",
+"title": "",
+"items": [
+{
+"label": "",
+"value": "",
+"trend": "up | down | flat"
+}
+]
+},
+{
+"type": "recommendation",
+"title": "",
+"content": [""]
+}
+],
+"recommended_visualizations": [""],
+"footer_note": "✦ PRISM — Illuminate Insight"
+}
+
+Section types allowed: highlight, bullets, metrics, timeline, recommendation, warning, quote
+
+Rules:
+* Max 5 sections
+* Max 5 bullets per section
+* Minimize token usage — be concise
+* Use short labels and bullets
+* Avoid repetition
+* Think visually — emphasize what matters
+* Make output presentation-ready
+* JSON only, no explanation`,
+                matrixView: `
+
+Extract actionable strategies from the content and organize them into a 2x2 matrix.
+
+Axes:
+* Impact (High vs Low)
+* Feasibility (Easy vs Hard)
+
+Return ONLY JSON in this format:
+
+{
+"title": "Main idea",
+"quadrants": [
+{"name": "High Impact / Easy", "items": []},
+{"name": "High Impact / Hard", "items": []},
+{"name": "Low Impact / Easy", "items": []},
+{"name": "Low Impact / Hard", "items": []}
+],
+"recommended_visualizations": ["Matrix View (2x2)"]
+}
+
+Rules:
+* Always return exactly 4 quadrants
+* Items must be concise and actionable
+* No explanation
+* JSON only`,
+                todoList: `
+
+Extract actionable tasks from the content.
+
+Return ONLY JSON:
+
+{
+"title": "Main idea",
+"tasks": [
+{"task": "Task description", "priority": "High"},
+{"task": "Task description", "priority": "Medium"},
+{"task": "Task description", "priority": "Low"}
+]
+}
+
+Rules:
+* Tasks must be clear and actionable
+* Priority: High | Medium | Low
+* Max 10 tasks
+* No explanation
+* JSON only`,
+                mindMap: `
+
+Convert the content into a hierarchical mind map.
+
+Return ONLY JSON:
+
+{
+"title": "",
+"central_node": "Main Idea",
+"level1": [
+{
+"title": "Branch 1",
+"children": [
+{ "title": "Sub 1" },
+{ "title": "Sub 2" }
+]
+}
+]
+}
+
+Rules:
+* Max 5–7 level1 branches
+* Max 3 children per branch
+* Max depth = 3 levels
+* Keep labels short (2–5 words)
+* No explanation
+* JSON only`,
+                timelineView: `
+
+You are an expert program manager, PMO lead, and visual project planner.
+
+Analyze the input and generate a structured project timeline visualization.
+
+The frontend will render EXACTLY what you return.
+
+Return ONLY JSON in this exact format:
+
+{
+"title": "",
+"subtitle": "",
+"timeline_type": "roadmap | gantt-lite | phased",
+"time_units": ["Q1", "Q2", "Q3", "Q4"],
+"workstreams": [
+{
+"name": "Platform Engineering",
+"color": "#4285F4",
+"items": [
+{
+"title": "API Gateway Setup",
+"start": 0,
+"end": 1,
+"status": "complete | in-progress | planned | risk",
+"type": "task",
+"dependencies": [],
+"milestone": false,
+"emoji": "⚙️",
+"notes": "Foundation setup"
+},
+{
+"title": "Pilot Launch",
+"start": 2,
+"end": 2,
+"status": "planned",
+"type": "milestone",
+"dependencies": ["API Gateway Setup"],
+"milestone": true,
+"emoji": "🚀"
+}
+]
+}
+],
+"critical_risks": [
+{
+"title": "Risk description",
+"impact": "High/Medium/Low"
+}
+],
+"legend": [
+{
+"label": "Milestone",
+"symbol": "◆"
+},
+{
+"label": "Dependency",
+"symbol": "→"
+}
+],
+"footer_note": "✦ PRISM — Illuminate Insight"
+}
+
+Rules:
+* Think visually — group work logically into workstreams
+* Max 3–6 workstreams, max 20 timeline items total
+* Use milestones sparingly
+* Show realistic sequencing
+* Status: complete | in-progress | planned | risk
+* dependencies: array of item titles this depends on
+* Only include meaningful dependencies
+* Colors should contrast well
+* Short labels, compact notes
+* No verbose explanations
+* JSON only`,
+                leanCanvas: `
+
+Organize the content into a Lean Canvas format with this spatial layout:
+
+Column 1 (Left): Problem (top) | Existing Alternatives (bottom)
+Column 2: Solution (top) | Key Metrics (bottom)
+Column 3 (Center): Unique Value Proposition (top) | High-Level Concept (bottom)
+Column 4: Unfair Advantage (top) | Channels (bottom)
+Column 5 (Right): Customer Segments (top) | Early Adopters (bottom)
+Bottom: Cost Structure (left) | Revenue Streams (right)
+
+Return ONLY JSON:
+
+{
+"title": "",
+"canvas": {
+"problem": [],
+"solution": [],
+"unique_value_proposition": "",
+"unfair_advantage": "",
+"customer_segments": [],
+"existing_alternatives": [],
+"key_metrics": [],
+"high_level_concept": "",
+"channels": [],
+"early_adopters": [],
+"cost_structure": [],
+"revenue_streams": []
+}
+}
+
+Rules:
+* Keep entries concise
+* Max 2–3 items per section
+* No explanation
+* JSON only`,
+                flowchart: `
+
+Convert the following content into a flowchart.
+
+Return ONLY JSON:
+
+{
+"title": "",
+"nodes": [
+{ "id": "1", "label": "Start", "type": "start" },
+{ "id": "2", "label": "Process step", "type": "process" },
+{ "id": "3", "label": "Decision?", "type": "decision" }
+],
+"edges": [
+{ "from": "1", "to": "2", "label": "" },
+{ "from": "2", "to": "3", "label": "" }
+]
+}
+
+Node types allowed:
+* start
+* process
+* decision
+* end
+
+Rules:
+* Keep flow logical and sequential
+* Use decision nodes where branching exists
+* Max 10 nodes
+* JSON only`,
+                umlSequence: `
+
+Convert the following content into a UML sequence diagram.
+
+Return ONLY JSON:
+
+{
+"title": "",
+"actors": ["User", "System", "Service"],
+"messages": [
+{
+"from": "User",
+"to": "System",
+"message": "Request action"
+},
+{
+"from": "System",
+"to": "Service",
+"message": "Process request"
+},
+{
+"from": "Service",
+"to": "System",
+"message": "Response"
+},
+{
+"from": "System",
+"to": "User",
+"message": "Return result"
+}
+]
+}
+
+Rules:
+* Maintain chronological order
+* Use clear actor names
+* Max 10 messages
+* JSON only`,
+                goldenCircle: `
+
+Organize the content using Simon Sinek's Golden Circle framework.
+
+Return ONLY JSON:
+
+{
+"title": "",
+"why": "Purpose, belief, motivation",
+"what": "Product, outcome, offering",
+"how": "Process, approach, differentiation"
+}
+
+Rules:
+* WHY → purpose, belief, motivation
+* WHAT → product, outcome, offering
+* HOW → process, approach, differentiation
+* Keep each section concise (2–4 lines max)
+* No explanation
+* JSON only`,
+                reflectiveModel: `
+
+Organize the content using Driscoll's Reflective Model.
+
+Return ONLY JSON:
+
+{
+"title": "",
+"what": "Summary of situation",
+"so_what": "Insights, implications",
+"now_what": "Actions, next steps"
+}
+
+Rules:
+* WHAT → summary of situation
+* SO WHAT → insights, implications
+* NOW WHAT → actions, next steps
+* Keep concise
+* No explanation
+* JSON only`,
+                blamelessPostmortem: `
+
+You are an expert Site Reliability Engineer.
+
+Convert the following incident description into a structured Incident Postmortem.
+
+Follow this EXACT structure:
+
+{
+  "executive_summary": {
+    "teams": "",
+    "impact": "",
+    "root_cause": ""
+  },
+  "detailed_summary": "",
+  "timeline": [
+    { "time": "", "event": "" }
+  ],
+  "sev_level": "",
+  "impact_analysis": "",
+  "resolution": "",
+  "root_cause_analysis": [
+    {
+      "why_question": "",
+      "answer": ""
+    }
+  ],
+  "action_items": [
+    { "issue": "", "action": "", "owner": "", "eta": "" }
+  ],
+  "discussion": {
+    "went_well": [],
+    "improvements": []
+  }
+}
+
+Rules:
+- Maintain a BLAMELESS tone
+- Be concise but complete
+- Infer missing details logically
+- Timeline must be chronological
+- Root Cause Analysis must strictly follow the 5 Whys methodology
+- Each Why question must be fully written out as a complete sentence/question
+- Each Why answer should directly explain the reason behind the previous Why question
+- The NEXT Why question must be derived from the answer to the PREVIOUS Why answer
+- The chain of Why questions should progressively drill deeper toward the true systemic root cause
+- Avoid generic placeholders like "Why 1", "Why 2", etc.
+- Use meaningful and contextual Why questions
+- The final Why should ideally reveal a process, monitoring, architectural, operational, or organizational gap
+- Action items must directly map back to identified root causes
+- No explanation outside JSON`,
+                earningsSnapshot: `
+
+You are a financial analyst and investment advisor.
+
+Convert the following earnings report or financial content into a concise, consulting-style Earnings Snapshot for average investors.
+
+Follow this EXACT structure:
+
+{
+"company": "",
+"period": "",
+"headline_summary": [
+"1-2 line key takeaway",
+"1-2 line key takeaway"
+],
+"key_metrics": [
+{ "metric": "Revenue", "value": "$X.XB / $X.XM", "trend": "up/down/flat" },
+{ "metric": "Net Income", "value": "$X.XB / $X.XM", "trend": "up/down/flat" },
+{ "metric": "EPS", "value": "$X.XX", "trend": "up/down/flat" },
+{ "metric": "EBITDA", "value": "$X.XB / $X.XM", "trend": "up/down/flat" },
+{ "metric": "Op. Margin", "value": "X.X%", "trend": "up/down/flat" },
+{ "metric": "Free Cash Flow", "value": "$X.XB / $X.XM", "trend": "up/down/flat" }
+],
+"financial_highlights": [
+"bullet point",
+"bullet point"
+],
+"drivers": [
+"What drove performance",
+"Key factors"
+],
+"risks": [
+"Risk or concern",
+"Challenge ahead"
+],
+"outlook": [
+"Forward looking statement",
+"Management guidance"
+],
+"stock_summary": {
+"price": "",
+"5_day_trend": "up/down/volatile/flat",
+"commentary": "Brief investor-friendly commentary"
+}
+}
+
+Rules:
+* EXTRACT ALL NUMBERS: Revenue, Net Income, EPS, EBITDA, Margins, Cash Flow
+* Format numbers clearly: $X.XB (billions) or $X.XM (millions) or $X.XX (per share)
+* Include YoY comparison and trend (up/down/flat)
+* Be concise (consulting style, max 1-2 lines per bullet)
+* Use simple language (for average investors)
+* Infer missing metrics if needed but avoid hallucination
+* Do NOT output long paragraphs
+* Do NOT exceed 8-10 bullets per section
+* Neutral tone, no hype
+* JSON only, no explanation outside`,
+                techArchDiagram: `
+
+You are a principal solutions architect and technical diagram designer.
+
+Analyze the input and generate a structured technology architecture diagram.
+
+The output must be visually organized and presentation-ready.
+
+Return ONLY JSON in this exact format:
+
+{
+"title": "",
+"subtitle": "",
+"layout": "horizontal | vertical | hybrid",
+"nodes": [
+{
+"id": "frontend",
+"label": "React Frontend",
+"type": "frontend",
+"emoji": "🌐",
+"description": "User-facing web application",
+"position": {
+"x": 100,
+"y": 80
+},
+"style": {
+"width": 180,
+"height": 70,
+"background": "#E8F0FE",
+"borderColor": "#4285F4"
+}
+}
+],
+"connections": [
+{
+"from": "frontend",
+"to": "api_gateway",
+"label": "HTTPS",
+"type": "sync"
+}
+],
+"legend": [
+{
+"type": "database",
+"emoji": "🛢",
+"meaning": "Database"
+},
+{
+"type": "event",
+"emoji": "⚡",
+"meaning": "Event Trigger"
+}
+]
+}
+
+Node types allowed:
+* frontend, backend, api_gateway, microservice, database, cache
+* queue, event, storage, external_api, auth, analytics
+* batch_job, monitoring, mobile_app, ai_service
+
+Styling rules:
+* frontend: blue tones, rounded rectangle
+* database: cylinder-style, subtle shadow
+* queue/event: lightning icon
+* storage: bucket/file representation
+* external_api: dashed border
+* monitoring: observability icon
+
+Connection types:
+* sync: solid line
+* async: dashed line
+
+CRITICAL POSITIONING RULES:
+* NO OVERLAPPING boxes - ensure at least 40px spacing between all nodes
+* Position nodes in logical groups/layers (left to right or top to bottom)
+* Leave 200px minimum horizontal space between node groups
+* Use grid-aligned positioning: x values should increment by 250+ for horizontal placement
+* Vertical alignment: y values should differ by 150+ for distinct rows
+* Maximum diagram width: 1200px to stay readable
+* Maximum diagram height: 800px
+
+Rules:
+* Architecture should feel polished and balanced
+* Use horizontal + vertical positioning appropriately
+* Avoid clutter (max 15 nodes)
+* Group related services visually by proximity
+* Include concise descriptions
+* Prioritize readability and spacing over density
+* Labels should be short (max 20 chars)
+* Use emojis sparingly but effectively
+* Always include a legend section
+* JSON only, no explanation`,
+                default: `
+
+Return JSON:
+
+{
+"title": "Main idea",
+"summary": "Short summary",
+"key_points": ["point1", "point2"],
+"structure": [
+{
+"heading": "Section",
+"items": ["item1", "item2"]
+}
+],
+"recommended_visualizations": ["Clarity View", "Node View"]
+}
+
+Rules:
+* JSON only
+* No explanation
+* Respond with valid JSON only
+* recommended_visualizations: array of 1-3 options based on content type
+* Choose from: "Clarity View", "Node View", "Matrix View (2x2)"`
+            }
+        };
+
+        const TAGLINES = [
+            "Transforming words into wisdom",
+            "Because a picture is worth a thousand words",
+            "Turning text into insights",
+            "See your ideas in a new light",
+            "Illuminating your thoughts with visuals",
+            "Bringing your words to life with visuals",
+            "Transforming text into vibrant visuals",
+            "Visualize your ideas, amplify your impact",
+            "From words to wonders: visualizing your ideas with PRISM",
+            "Unlock the power of your words with PRISM's visual magic",
+            "See the bigger picture with PRISM's visual insights",
+            "Turning text into a visual masterpiece with PRISM",
+            "Let PRISM refract your ideas into stunning visuals",
+            "Where your words become a canvas for creativity",
+            "What you visualize is what manifests",
+            "Because what you see is what you get"
+        ];
+
+        // ========== STATE MANAGEMENT ==========
+
+        const STATE = {
+            currentRecommendations: null,
+            userSelectedViz: false,
+            lastExportData: null,
+            recommendationTimeout: null,
+            currentTheme: 'theme-business'
+        };
+
+        // Set random tagline on load
+        function setRandomTagline() {
+            const tagline = document.getElementById('tagline');
+            tagline.textContent = TAGLINES[Math.floor(Math.random() * TAGLINES.length)];
+        }
+
+        setRandomTagline();
+
+        // Set theme
+        function setTheme(theme) {
+            const app = document.getElementById('app');
+            app.classList.remove('theme-business', 'theme-geek');
+            app.classList.add(theme);
+        }
+
+        // Initialize card-based visualization selector
+        function initializeVizCardSelector() {
+            const cards = document.querySelectorAll('.viz-card');
+            const selectElement = document.getElementById('vizType');
+
+            // Set initial selected card
+            const defaultCard = document.querySelector('[data-value="clarity-view"]');
+            if (defaultCard) {
+                defaultCard.classList.add('selected');
+            }
+
+            cards.forEach(card => {
+                // Main card click (select visualization)
+                card.addEventListener('click', function(e) {
+                    // Don't select if clicking the info button
+                    if (e.target.closest('.viz-card-info-btn')) {
+                        return;
+                    }
+
+                    const value = this.getAttribute('data-value');
+
+                    // Update hidden select element
+                    selectElement.value = value;
+
+                    // Update card selection UI
+                    cards.forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+
+                    // Mark user selection
+                    STATE.userSelectedViz = true;
+                });
+
+                // Info button click
+                const infoBtn = card.querySelector('.viz-card-info-btn');
+                if (infoBtn) {
+                    infoBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const icon = card.querySelector('.viz-card-icon').textContent;
+                        const title = card.querySelector('.viz-card-title').textContent;
+                        const infoText = card.getAttribute('data-info') || '';
+                        const details = card.getAttribute('data-details') || '';
+                        const [usage, output] = infoText.split('|');
+
+                        openVizInfo(icon, title, usage, output, details);
+                    });
+                }
+            });
+
+            // Close popup when clicking overlay
+            document.getElementById('vizInfoOverlay').addEventListener('click', closeVizInfo);
+        }
+
+        // Open visualization info popup
+        function openVizInfo(icon, title, usage, output, details) {
+            document.getElementById('popupIcon').textContent = icon;
+            document.getElementById('popupTitle').textContent = title;
+            document.getElementById('popupUsage').textContent = usage;
+            document.getElementById('popupOutput').textContent = output;
+            document.getElementById('popupDetails').textContent = details;
+
+            document.getElementById('vizInfoOverlay').classList.add('visible');
+            document.getElementById('vizInfoPopup').classList.add('visible');
+        }
+
+        // Close visualization info popup
+        function closeVizInfo() {
+            document.getElementById('vizInfoOverlay').classList.remove('visible');
+            document.getElementById('vizInfoPopup').classList.remove('visible');
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initializeVizCardSelector);
+
+        // Get visualization type
+        function getVisualizationType() {
+            return document.getElementById('vizType').value;
+        }
+
+        // ========== API LAYER ==========
+
+        const API = {
+            // Fetch visualization recommendations
+            async fetchRecommendations(text) {
+                const response = await fetch(CONFIG.api.baseUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'anthropic-version': CONFIG.api.version
+                    },
+                    body: JSON.stringify({
+                        model: CONFIG.api.model,
+                        max_tokens: CONFIG.api.maxTokensRecommendation,
+                        system: PROMPTS.recommendation.system,
+                        messages: [{ role: 'user', content: PROMPTS.recommendation.user(text) }]
+                    })
+                });
+                return response.json();
+            },
+
+            // Fetch visualizations
+            async fetchVisualizations(text, vizType) {
+                const systemPrompt = this.buildPrompt(vizType);
+                const userPrompt = `Convert this text into structured insights:\n\n${text}`;
+
+                // Dynamically calculate max_tokens based on input length
+                // Rough estimate: 4 characters ≈ 1 token, so we scale up for larger inputs
+                // Large text (5000+ chars) gets higher token limit for complete output
+                let maxTokens = CONFIG.api.maxTokensVisualization;
+                if (text.length > 5000) {
+                    maxTokens = CONFIG.api.maxTokensVisualizationLarge;
+                } else if (text.length > 2000) {
+                    maxTokens = Math.min(6000, CONFIG.api.maxTokensVisualization + Math.floor(text.length / 10));
+                }
+
+                const response = await fetch(CONFIG.api.baseUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'anthropic-version': CONFIG.api.version
+                    },
+                    body: JSON.stringify({
+                        model: CONFIG.api.model,
+                        max_tokens: maxTokens,
+                        system: systemPrompt,
+                        messages: [{ role: 'user', content: userPrompt }]
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API Error: ${response.status} ${response.statusText}\n${errorText}`);
+                }
+
+                return response.json();
+            },
+
+            // Fetch URL content
+            async fetchURLContent(url) {
+                const response = await fetch(CONFIG.api.urlFetchEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                return response.json();
+            },
+
+            // Build system prompt based on visualization type
+            buildPrompt(vizType) {
+                let systemPrompt = PROMPTS.visualization.base;
+
+                if (vizType === 'clarity-plus') {
+                    systemPrompt += PROMPTS.visualization.clarityPlus;
+                } else if (vizType === 'matrix-view') {
+                    systemPrompt += PROMPTS.visualization.matrixView;
+                } else if (vizType === 'todo-list') {
+                    systemPrompt += PROMPTS.visualization.todoList;
+                } else if (vizType === 'mind-map') {
+                    systemPrompt += PROMPTS.visualization.mindMap;
+                } else if (vizType === 'timeline-view') {
+                    systemPrompt += PROMPTS.visualization.timelineView;
+                } else if (vizType === 'lean-canvas') {
+                    systemPrompt += PROMPTS.visualization.leanCanvas;
+                } else if (vizType === 'earnings-snapshot') {
+                    systemPrompt += PROMPTS.visualization.earningsSnapshot;
+                } else if (vizType === 'flowchart') {
+                    systemPrompt += PROMPTS.visualization.flowchart;
+                } else if (vizType === 'uml-sequence') {
+                    systemPrompt += PROMPTS.visualization.umlSequence;
+                } else if (vizType === 'golden-circle') {
+                    systemPrompt += PROMPTS.visualization.goldenCircle;
+                } else if (vizType === 'reflective-model') {
+                    systemPrompt += PROMPTS.visualization.reflectiveModel;
+                } else if (vizType === 'incident-postmortem') {
+                    systemPrompt += PROMPTS.visualization.blamelessPostmortem;
+                } else if (vizType === 'tech-arch-diagram') {
+                    systemPrompt += PROMPTS.visualization.techArchDiagram;
+                } else {
+                    systemPrompt += PROMPTS.visualization.default;
+                }
+
+                return systemPrompt;
+            },
+
+            // Parse visualization response
+            parseResponse(text) {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.log('First parse attempt failed, raw text length:', text.length);
+
+                    let cleanJson = text;
+
+                    // Remove markdown code fences
+                    cleanJson = cleanJson.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+
+                    // Find the JSON object boundaries
+                    const firstBrace = cleanJson.indexOf('{');
+                    const lastBrace = cleanJson.lastIndexOf('}');
+
+                    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                        cleanJson = cleanJson.substring(firstBrace, lastBrace + 1);
+                    }
+
+                    try {
+                        return JSON.parse(cleanJson);
+                    } catch (innerErr) {
+                        // Character-by-character state machine for robust parsing
+                        let lines = cleanJson.split('\n');
+                        let inString = false;
+                        let inEscape = false;
+                        let result = '';
+
+                        for (let i = 0; i < lines.length; i++) {
+                            let line = lines[i];
+
+                            for (let j = 0; j < line.length; j++) {
+                                let char = line[j];
+
+                                if (inEscape) {
+                                    result += char;
+                                    inEscape = false;
+                                    continue;
+                                }
+
+                                if (char === '\\') {
+                                    result += char;
+                                    inEscape = true;
+                                    continue;
+                                }
+
+                                if (char === '"' && !inEscape) {
+                                    inString = !inString;
+                                }
+
+                                result += char;
+                            }
+
+                            // Preserve newlines inside strings, remove outside
+                            if (inString && i < lines.length - 1) {
+                                result += '\\n';
+                            } else if (i < lines.length - 1) {
+                                result += '\n';
+                            }
+                        }
+
+                        try {
+                            return JSON.parse(result);
+                        } catch (secondErr) {
+                            // Fix trailing commas and unquoted keys
+                            cleanJson = result
+                                .replace(/,(\s*[}\]])/g, '$1')
+                                .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)/g, '$1"$2"$3');
+
+                            try {
+                                return JSON.parse(cleanJson);
+                            } catch (thirdErr) {
+                                // Extract position from error message
+                                const posMatch = thirdErr.message.match(/position (\d+)/);
+                                const pos = posMatch ? parseInt(posMatch[1]) : null;
+
+                                let debugContext = '';
+                                if (pos) {
+                                    const start = Math.max(0, pos - 100);
+                                    const end = Math.min(cleanJson.length, pos + 100);
+                                    debugContext = `\n\nContext around error (pos ${pos}):\n${cleanJson.substring(start, end)}`;
+                                }
+
+                                console.error('JSON parse error:', thirdErr.message);
+                                console.error('Full response length:', cleanJson.length);
+                                console.error('Full response:', cleanJson);
+
+                                throw new Error(`JSON parsing failed: ${thirdErr.message}. This might occur if the response was truncated. Try splitting your input into smaller parts, or check the browser console for the full response.${debugContext}`);
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // ========== RENDERING HELPERS ==========
+
+        // Wrap render output and insert into DOM
+        function renderToOutput(html) {
+            document.getElementById('output').innerHTML = html;
+        }
+
+        // Helper for collapsible section headers
+        function createToggleHeader(contentId, sectionId, label) {
+            return `<div id="${sectionId}" style="background: #f0f4ff; border: 2px solid var(--primary-color); border-radius: var(--border-radius-md); padding: 15px; font-weight: 700; color: var(--primary-color); font-size: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s;" onclick="toggleSection('${contentId}', '${sectionId}')">
+                <span>${escapeHtml(label)}</span>
+                <span style="font-size: 24px; user-select: none;">+</span>
+            </div>`;
+        }
+
+        // Display visualization type badge
+        function showVizTypeBadge(vizType) {
+            const badge = document.getElementById('vizTypeBadge');
+            const displayName = VIZ_TYPES[vizType] || vizType;
+            badge.innerHTML = `<div class="viz-type-badge">📊 Visualization: ${displayName}</div>`;
+        }
+
+
+        // Extract text from URL
+        async function extractTextFromURL(url) {
+            // Validate URL
+            parseURL(url);
+
+            try {
+                const data = await API.fetchURLContent(url);
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to fetch');
+                }
+
+                const html = data.content;
+
+                // Parse HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Remove unwanted elements
+                const removeSelectors = ['script', 'style', 'nav', 'footer', 'header', 'iframe', 'noscript'];
+                removeSelectors.forEach(selector => {
+                    doc.querySelectorAll(selector).forEach(el => el.remove());
+                });
+
+                // Extract text
+                let text = doc.body.innerText.trim();
+
+                // Clean up excessive whitespace
+                text = text.replace(/\n\s*\n/g, '\n').replace(/\s+/g, ' ');
+
+                if (!text || text.length < 50) {
+                    throw new Error('Extracted text is too short');
+                }
+
+                return text;
+            } catch (err) {
+                console.error('URL extraction error:', err.message);
+                throw new Error('Could not fetch URL. Make sure proxy.js is running (node proxy.js), or paste text directly instead.');
+            }
+        }
+
+        // ========== PRISM ORCHESTRATOR HELPER FUNCTIONS ==========
+
+        // Extract input text from URL or textarea
+        async function extractInputText() {
+            let input = document.getElementById('inputText').value.trim();
+            const outputDiv = document.getElementById('output');
+            const btn = document.getElementById('prismBtn');
+
+            if (!input) {
+                outputDiv.innerHTML = '<div class="error">Please paste text or URL!</div>';
+                throw new Error('No input provided');
+            }
+
+            // Check if input is a URL
+            const isUrl = /^https?:\/\//.test(input);
+
+            if (isUrl) {
+                outputDiv.innerHTML = '<div class="loading"><span class="spinner"></span>Fetching content from URL...</div>';
+                btn.disabled = true;
+
+                try {
+                    input = await extractTextFromURL(input);
+                    outputDiv.innerHTML = '<div class="loading"><span class="spinner"></span>Prisming your content...</div>';
+                    return input;
+                } catch (err) {
+                    btn.disabled = false;
+                    outputDiv.innerHTML = `<div class="error">
+                        <strong>Error:</strong> ${err.message}<br>
+                        <small>Try pasting the text directly instead.</small>
+                    </div>`;
+                    throw err;
+                }
+            } else {
+                outputDiv.innerHTML = '<div class="loading"><span class="spinner"></span>Prisming your content...</div>';
+                btn.disabled = true;
+                return input;
+            }
+        }
+
+        // Process content and render results
+        async function processContent(inputText, vizType) {
+            const data = await API.fetchVisualizations(inputText, vizType);
+            const responseText = data.content?.[0]?.text;
+
+            if (!responseText) {
+                throw new Error('No response from API');
+            }
+
+            return API.parseResponse(responseText);
+        }
+
+        // Display results
+        function displayResults(parsed, vizType) {
+            const outputDiv = document.getElementById('output');
+            const btn = document.getElementById('prismBtn');
+            const vizTypeBadge = document.getElementById('vizTypeBadge');
+            const exportButtons = document.getElementById('exportButtons');
+
+            showVizTypeBadge(vizType);
+            renderOutput(parsed);
+            STATE.lastExportData = parsed;
+            exportButtons.style.display = 'flex';
+
+            btn.disabled = false;
+            setRandomTagline();
+        }
+
+        // Handle errors
+        function handleError(error) {
+            const outputDiv = document.getElementById('output');
+            const btn = document.getElementById('prismBtn');
+            const vizTypeBadge = document.getElementById('vizTypeBadge');
+            const exportButtons = document.getElementById('exportButtons');
+
+            vizTypeBadge.innerHTML = '';
+            exportButtons.style.display = 'none';
+            STATE.lastExportData = null;
+            outputDiv.innerHTML = `<div class="error">
+                <strong>Error:</strong> ${error.message}<br>
+                <small>Raw response will help debug. Check console for details.</small>
+            </div>`;
+            console.error('Full error:', error);
+            btn.disabled = false;
+        }
+
+        // Main orchestrator function
+        async function prismIt() {
+            try {
+                // Step 1: Extract input text
+                const inputText = await extractInputText();
+
+                // Step 2: Get visualization type
+                const vizType = getVisualizationType();
+
+                // Step 3: Process content with API
+                const parsed = await processContent(inputText, vizType);
+
+                // Step 4: Display results
+                displayResults(parsed, vizType);
+            } catch (error) {
+                handleError(error);
+            }
+        }
+
+        // lastExportData is now managed in STATE object above
+
+        // Format bullet item with keyword highlighting
+        function formatBulletItem(text) {
+            // Escape HTML first
+            let formatted = escapeHtml(text);
+
+            // Bold text before colon (e.g., "Pricing Advice: raise price" → "<strong>Pricing Advice:</strong> raise price")
+            if (formatted.includes(':')) {
+                formatted = formatted.replace(/^([^:]+):/, '<strong>$1:</strong>');
+            } else {
+                // Bold first 2-3 words if no colon exists
+                const words = formatted.split(' ');
+                if (words.length > 2) {
+                    const boldWords = words.slice(0, 3).join(' ');
+                    const restWords = words.slice(3).join(' ');
+                    formatted = `<strong>${boldWords}</strong> ${restWords}`;
+                } else if (words.length > 1) {
+                    const boldWords = words.slice(0, 2).join(' ');
+                    const restWords = words.slice(2).join(' ');
+                    formatted = `<strong>${boldWords}</strong> ${restWords}`;
+                }
+            }
+
+            return formatted;
+        }
+
+        // Export as PDF
+        function exportAsPDF() {
+            if (!STATE.lastExportData) {
+                alert('No visualization to export. Please run Prism It first.');
+                return;
+            }
+
+            const exportBtn = event.target;
+            exportBtn.disabled = true;
+            exportBtn.textContent = '⏳ Generating PDF...';
+
+            const outputDiv = document.getElementById('output');
+
+            // Store original styles
+            const originalHeight = outputDiv.style.maxHeight;
+            const originalOverflow = outputDiv.style.overflow;
+
+            // Expand container to show all content
+            outputDiv.style.maxHeight = 'none';
+            outputDiv.style.overflow = 'visible';
+
+            // Give DOM time to recalculate
+            setTimeout(() => {
+                html2canvas(outputDiv, {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    allowTaint: true
+                }).then(canvas => {
+                    const { jsPDF } = window.jspdf;
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+
+                    const imgWidth = 210;
+                    const pageHeight = 295;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                    let heightLeft = imgHeight;
+                    let position = 0;
+
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+
+                    pdf.save(`prism-output-${new Date().toISOString().split('T')[0]}.pdf`);
+
+                    // Restore original styles
+                    outputDiv.style.maxHeight = originalHeight;
+                    outputDiv.style.overflow = originalOverflow;
+
+                    exportBtn.disabled = false;
+                    exportBtn.textContent = '📄 Export as PDF';
+                }).catch(err => {
+                    console.error('Export error:', err);
+                    alert('Failed to export PDF. Check console for details.');
+
+                    // Restore original styles
+                    outputDiv.style.maxHeight = originalHeight;
+                    outputDiv.style.overflow = originalOverflow;
+
+                    exportBtn.disabled = false;
+                    exportBtn.textContent = '📄 Export as PDF';
+                });
+            }, 100);
+        }
+
+        function renderOutput(data) {
+            const vizType = getVisualizationType();
+
+            if (vizType === 'clarity-plus') {
+                renderClarityPlus(data);
+            } else if (vizType === 'matrix-view') {
+                renderMatrixView(data);
+            } else if (vizType === 'node-view') {
+                renderNodeView(data);
+            } else if (vizType === 'todo-list') {
+                renderTodoListView(data);
+            } else if (vizType === 'mind-map') {
+                renderMindMap(data);
+            } else if (vizType === 'timeline-view') {
+                renderTimelineView(data);
+            } else if (vizType === 'lean-canvas') {
+                renderLeanCanvasView(data);
+            } else if (vizType === 'earnings-snapshot') {
+                renderEarningsSnapshot(data);
+            } else if (vizType === 'flowchart') {
+                renderFlowchart(data);
+            } else if (vizType === 'uml-sequence') {
+                renderUmlSequence(data);
+            } else if (vizType === 'golden-circle') {
+                renderGoldenCircle(data);
+            } else if (vizType === 'reflective-model') {
+                renderReflectiveModel(data);
+            } else if (vizType === 'incident-postmortem') {
+                renderBlamelessPostmortem(data);
+            } else if (vizType === 'tech-arch-diagram') {
+                renderTechArchDiagram(data);
+            } else {
+                renderClarityView(data);
+            }
+        }
+
+        function renderClarityView(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output">';
+
+            // Title
+            if (data.title) {
+                html += `<h2>${escapeHtml(data.title)}</h2>`;
+            }
+
+            // Summary
+            if (data.summary) {
+                html += `<p>${escapeHtml(data.summary)}</p>`;
+            }
+
+            // Key Points
+            if (data.key_points && Array.isArray(data.key_points) && data.key_points.length > 0) {
+                html += '<h3 style="color: var(--primary-color); margin-top: 20px; margin-bottom: 10px;">Key Points</h3>';
+                html += '<ul style="text-align: left; padding-left: 20px;">';
+                data.key_points.forEach(point => {
+                    html += `<li style="margin-bottom: 8px;">${formatBulletItem(point)}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            // Structure Sections - Expandable Layout
+            if (data.structure && Array.isArray(data.structure) && data.structure.length > 0) {
+                html += '<div style="margin-top: 30px;">';
+                data.structure.forEach((section, idx) => {
+                    if (section.heading) {
+                        const sectionId = `section-${idx}`;
+                        const contentId = `content-${idx}`;
+                        html += `<div style="margin-bottom: 25px;">
+                            <div id="${sectionId}" style="background: #f0f4ff; border: 2px solid var(--primary-color); border-radius: var(--border-radius-md); padding: 15px; font-weight: 700; color: var(--primary-color); font-size: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s;" onclick="toggleSection('${contentId}', '${sectionId}')">
+                                <span>${escapeHtml(section.heading)}</span>
+                                <span style="font-size: 24px; user-select: none;">+</span>
+                            </div>
+                            <div id="${contentId}" style="display: none; margin-top: 10px;">
+                                <div style="text-align: center; color: var(--primary-color); font-size: 20px; margin: 5px 0;">↓</div>`;
+
+                        if (section.items && Array.isArray(section.items) && section.items.length > 0) {
+                            html += '<div style="margin-left: 20px; padding: 15px; background: white; border-left: 3px solid var(--primary-color); text-align: left;">';
+                            section.items.forEach(item => {
+                                html += `<div style="margin-bottom: 10px; color: #555; line-height: 1.6; padding-left: 10px;">
+                                    <span style="margin-right: 10px;">•</span>${formatBulletItem(item)}
+                                </div>`;
+                            });
+                            html += '</div>';
+                        }
+                        html += '</div></div>';
+                    }
+                });
+                html += '</div>';
+            }
+
+            html += '</div>';
+            document.getElementById('output').innerHTML = html;
+        }
+
+        function renderClarityPlus(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output" style="background: white;">';
+
+            // Hero section
+            if (data.hero) {
+                const accentColor = {
+                    'blue': '#4285F4',
+                    'green': '#34A853',
+                    'purple': '#A142F4',
+                    'orange': '#FFA726'
+                }[data.hero.accent || 'blue'] || '#4285F4';
+
+                html += `<div style="padding: 40px 20px; background: linear-gradient(135deg, ${accentColor}20, ${accentColor}05); border-left: 4px solid ${accentColor}; margin-bottom: 30px;">
+                    <h2 style="margin: 0 0 10px 0; color: #000; font-size: 28px; font-weight: 700;">${escapeHtml(data.hero.headline || '')}</h2>`;
+                if (data.hero.subheadline) {
+                    html += `<p style="margin: 0; color: #666; font-size: 15px; line-height: 1.5;">${escapeHtml(data.hero.subheadline)}</p>`;
+                }
+                html += '</div>';
+            }
+
+            // Main title/subtitle
+            if (data.title && !data.hero) {
+                html += `<h2 style="padding: 20px 20px 10px 20px; margin: 0;">${escapeHtml(data.title)}</h2>`;
+                if (data.subtitle) {
+                    html += `<p style="padding: 0 20px 20px 20px; margin: 0; color: #666;">${escapeHtml(data.subtitle)}</p>`;
+                }
+            }
+
+            // Sections
+            if (data.sections && Array.isArray(data.sections)) {
+                data.sections.forEach(section => {
+                    const sectionType = section.type || 'highlight';
+
+                    if (sectionType === 'highlight') {
+                        const importanceColor = {
+                            'high': '#D32F2F',
+                            'medium': '#F57C00',
+                            'low': '#388E3C'
+                        }[section.importance || 'medium'] || '#666';
+
+                        html += `<div style="padding: 20px; margin: 0 20px 15px 20px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid ${importanceColor};">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                <span style="font-size: 20px;">${section.icon || '▪'}</span>
+                                <h3 style="margin: 0; font-size: 15px; font-weight: 600; color: #000;">${escapeHtml(section.title || '')}</h3>
+                            </div>`;
+                        if (section.content && Array.isArray(section.content)) {
+                            html += '<ul style="margin: 0; padding-left: 30px; list-style: none;">';
+                            section.content.forEach(item => {
+                                html += `<li style="margin-bottom: 8px; color: #333; font-size: 13px; line-height: 1.6;">• ${escapeHtml(item)}</li>`;
+                            });
+                            html += '</ul>';
+                        }
+                        html += '</div>';
+                    } else if (sectionType === 'metrics') {
+                        html += `<div style="padding: 20px; margin: 0 20px 15px 20px;">
+                            <h3 style="margin: 0 0 15px 0; font-size: 15px; font-weight: 600; color: #000;">${escapeHtml(section.title || 'Metrics')}</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">`;
+                        if (section.items && Array.isArray(section.items)) {
+                            section.items.forEach(metric => {
+                                const trendSymbol = metric.trend === 'up' ? '↑' : metric.trend === 'down' ? '↓' : '→';
+                                const trendColor = metric.trend === 'up' ? '#34A853' : metric.trend === 'down' ? '#D32F2F' : '#666';
+                                html += `<div style="padding: 12px; background: #f9f9f9; border-radius: 6px; border-top: 2px solid ${trendColor};">
+                                    <div style="font-size: 12px; color: #666; margin-bottom: 6px;">${escapeHtml(metric.label || '')}</div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #000; margin-bottom: 6px;">${escapeHtml(metric.value || '')}</div>
+                                    <div style="font-size: 13px; color: ${trendColor}; font-weight: 600;">${trendSymbol} ${metric.trend}</div>
+                                </div>`;
+                            });
+                        }
+                        html += '</div></div>';
+                    } else if (sectionType === 'recommendation' || sectionType === 'warning') {
+                        const bgColor = sectionType === 'warning' ? '#FFF3E0' : '#E8F5E9';
+                        const borderColor = sectionType === 'warning' ? '#FF9800' : '#4CAF50';
+                        const icon = sectionType === 'warning' ? '⚠' : '✓';
+
+                        html += `<div style="padding: 20px; margin: 0 20px 15px 20px; background: ${bgColor}; border-radius: 8px; border-left: 4px solid ${borderColor};">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                <span style="font-size: 20px;">${icon}</span>
+                                <h3 style="margin: 0; font-size: 15px; font-weight: 600; color: #000;">${escapeHtml(section.title || '')}</h3>
+                            </div>`;
+                        if (section.content && Array.isArray(section.content)) {
+                            html += '<ul style="margin: 0; padding-left: 30px; list-style: none;">';
+                            section.content.forEach(item => {
+                                html += `<li style="margin-bottom: 8px; color: #333; font-size: 13px; line-height: 1.6;">• ${escapeHtml(item)}</li>`;
+                            });
+                            html += '</ul>';
+                        }
+                        html += '</div>';
+                    }
+                });
+            }
+
+            // Footer
+            if (data.footer_note) {
+                html += `<div style="padding: 15px 20px; text-align: center; color: #999; font-size: 12px; border-top: 1px solid #e0e0e0; margin-top: 20px;">
+                    ${escapeHtml(data.footer_note)}
+                </div>`;
+            }
+
+            html += '</div>';
+            outputDiv.innerHTML = html;
+        }
+
+        function renderTodoListView(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output">';
+
+            // Title
+            if (data.title) {
+                html += `<h2>${escapeHtml(data.title)}</h2>`;
+            }
+
+            // Fallback if no tasks
+            if (!data.tasks || !Array.isArray(data.tasks) || data.tasks.length === 0) {
+                html += '<p style="color: #999; text-align: center; margin-top: 20px;">No tasks extracted. Displaying as Clarity View instead.</p>';
+                document.getElementById('output').innerHTML = html;
+                renderClarityView(data);
+                return;
+            }
+
+            // To-Do List
+            html += '<div class="todo-list">';
+            data.tasks.forEach((task, idx) => {
+                const priority = task.priority || 'Low';
+                const priorityClass = `priority-${priority.toLowerCase()}`;
+                html += `<div class="todo-item" id="todo-${idx}" data-index="${idx}">
+                    <input type="checkbox" onchange="toggleTodo(${idx})" />
+                    <div class="todo-text">
+                        <span>${escapeHtml(task.task)}</span>
+                        <span class="priority-badge ${priorityClass}">${priority}</span>
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+
+            html += '</div>';
+            outputDiv.innerHTML = html;
+        }
+
+        function renderMindMap(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output">';
+
+            if (data.title) {
+                html += `<h2>${escapeHtml(data.title)}</h2>`;
+            }
+
+            if (!data.central_node || !data.level1 || !Array.isArray(data.level1) || data.level1.length === 0) {
+                html += '<p style="color: #999; text-align: center; margin-top: 20px;">Unable to generate mind map. Displaying as Node View instead.</p>';
+                document.getElementById('output').innerHTML = html;
+                renderNodeView(data);
+                return;
+            }
+
+            const containerHeight = 600;
+            const level1Radius = 180;
+            const level2Radius = 100;
+
+            // Mind map container with relative positioning for center calculations
+            html += `<div style="position: relative; width: 100%; height: ${containerHeight}px; margin: 30px 0; background: var(--bg-secondary); border-radius: var(--border-radius-md); border: 2px solid var(--primary-color); overflow: visible;">`;
+
+            // Central node (50%, 50% via translate)
+            html += `<div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 140px; padding: 10px; background: var(--bg-primary); border: 2px solid var(--primary-color); border-radius: 12px; text-align: center; font-weight: 700; color: var(--text-color); font-size: 14px; z-index: 20;">${escapeHtml(data.central_node)}</div>`;
+
+            // Calculate angles for level1 branches
+            const level1Count = Math.min(data.level1.length, 8);
+            const angleStep = (2 * Math.PI) / level1Count;
+
+            // Render level1 branches
+            data.level1.forEach((branch, idx) => {
+                if (idx >= level1Count) return;
+
+                const angle = idx * angleStep - Math.PI / 2;
+                const containerCenterX = 50;
+                const containerCenterY = 50;
+
+                // Calculate level1 position as percentage
+                const level1X = containerCenterX + (level1Radius / 600) * 100 * Math.cos(angle);
+                const level1Y = containerCenterY + (level1Radius / 600) * 100 * Math.sin(angle);
+
+                // Draw line from center to level1 node
+                const lineLength = level1Radius;
+                const lineAngleDeg = (angle * 180 / Math.PI) + 90;
+                const lineCenterX = containerCenterX + (level1Radius / 2 / 600) * 100 * Math.cos(angle);
+                const lineCenterY = containerCenterY + (level1Radius / 2 / 600) * 100 * Math.sin(angle);
+
+                html += `<div style="position: absolute; left: ${lineCenterX}%; top: ${lineCenterY}%; width: ${lineLength}px; height: 2px; background: var(--primary-color); transform: translate(-50%, -50%) rotate(${lineAngleDeg}deg); transform-origin: center; z-index: 1;"></div>`;
+
+                // Level1 node
+                html += `<div style="position: absolute; left: ${level1X}%; top: ${level1Y}%; transform: translate(-50%, -50%); width: 130px; padding: 8px; background: var(--bg-primary); border: 2px solid var(--primary-color); border-radius: 12px; text-align: center; font-weight: 600; color: var(--text-color); font-size: 12px; z-index: 10;">${escapeHtml(branch.title)}</div>`;
+
+                // Render level2 children around level1 node
+                if (branch.children && Array.isArray(branch.children) && branch.children.length > 0) {
+                    const childCount = Math.min(branch.children.length, 3);
+                    const childAngleSpread = 0.6;
+                    const childStartAngle = angle - (childCount - 1) * childAngleSpread / 2;
+
+                    branch.children.forEach((child, childIdx) => {
+                        if (childIdx >= childCount) return;
+
+                        const childAngle = childStartAngle + childIdx * childAngleSpread;
+                        const childX = level1X + (level2Radius / 600) * 100 * Math.cos(childAngle);
+                        const childY = level1Y + (level2Radius / 600) * 100 * Math.sin(childAngle);
+
+                        // Draw line from level1 to level2
+                        const childLineLength = level2Radius;
+                        const childLineAngleDeg = (childAngle * 180 / Math.PI) + 90;
+                        const childLineCenterX = level1X + (level2Radius / 2 / 600) * 100 * Math.cos(childAngle);
+                        const childLineCenterY = level1Y + (level2Radius / 2 / 600) * 100 * Math.sin(childAngle);
+
+                        html += `<div style="position: absolute; left: ${childLineCenterX}%; top: ${childLineCenterY}%; width: ${childLineLength}px; height: 1px; background: var(--primary-color); opacity: 0.6; transform: translate(-50%, -50%) rotate(${childLineAngleDeg}deg); transform-origin: center; z-index: 1;"></div>`;
+
+                        // Level2 node
+                        html += `<div style="position: absolute; left: ${childX}%; top: ${childY}%; transform: translate(-50%, -50%); width: 110px; padding: 6px; background: var(--bg-primary); border: 1px solid var(--primary-color); border-radius: 12px; text-align: center; color: var(--text-color); font-size: 11px; z-index: 5;">${escapeHtml(child.title)}</div>`;
+                    });
+                }
+            });
+
+            html += '</div></div>';
+            outputDiv.innerHTML = html;
+        }
+
+        function renderTimelineView(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output" style="background: white; padding: 0; display: flex; flex-direction: column;">';
+
+            // Header
+            if (data.title) {
+                html += `<div style="padding: 20px 20px 10px 20px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                    <h2 style="margin: 0; color: white;">${escapeHtml(data.title)}</h2>`;
+                if (data.subtitle) {
+                    html += `<p style="margin: 8px 0 0 0; font-size: 13px; opacity: 0.95;">${escapeHtml(data.subtitle)}</p>`;
+                }
+                html += '</div>';
+            }
+
+            // Fallback if no workstreams
+            if (!data.workstreams || !Array.isArray(data.workstreams) || data.workstreams.length === 0) {
+                html += '<p style="color: #999; text-align: center; padding: 20px;">Unable to generate timeline. Displaying as Clarity View instead.</p>';
+                document.getElementById('output').innerHTML = html;
+                renderClarityView(data);
+                return;
+            }
+
+            // Timeline container
+            html += `<div style="padding: 30px 20px; flex: 1; overflow-x: auto;">`;
+
+            // Time header
+            const timeUnits = data.time_units || [];
+            html += `<div style="display: flex; align-items: center; margin-bottom: 20px;">
+                <div style="width: 180px; font-weight: 600; font-size: 12px; color: #666; padding-right: 10px;">Workstream</div>
+                <div style="display: flex; gap: 2px; flex: 1;">`;
+            timeUnits.forEach(unit => {
+                html += `<div style="flex: 1; min-width: 80px; text-align: center; font-weight: 600; font-size: 12px; color: var(--primary-color); padding: 8px 4px;">${escapeHtml(unit)}</div>`;
+            });
+            html += `</div></div>`;
+
+            // Workstreams with Gantt bars
+            data.workstreams.forEach((stream) => {
+                const streamColor = stream.color || '#4285F4';
+                html += `<div style="display: flex; align-items: stretch; margin-bottom: 20px; min-height: 60px;">
+                    <div style="width: 180px; font-weight: 600; font-size: 12px; padding: 8px 10px; border-bottom: 1px solid #e0e0e0; color: #333;">${escapeHtml(stream.name)}</div>
+                    <div style="display: flex; gap: 2px; flex: 1; position: relative; border-bottom: 1px solid #e0e0e0; padding: 4px;">`;
+
+                // Render timeline cells for each time unit
+                if (stream.items && Array.isArray(stream.items)) {
+                    timeUnits.forEach((unit, timeIdx) => {
+                        html += `<div style="flex: 1; min-width: 80px; border-right: 1px solid #f0f0f0; position: relative; background: #fafafa;"></div>`;
+                    });
+
+                    // Overlay tasks/milestones on timeline
+                    stream.items.forEach(item => {
+                        const startIdx = item.start || 0;
+                        const endIdx = item.end || startIdx;
+                        const isComplete = item.status === 'complete';
+                        const isInProgress = item.status === 'in-progress';
+                        const isRisk = item.status === 'risk';
+
+                        const barColor = isComplete ? '#4CAF50' : isInProgress ? '#FFC107' : isRisk ? '#f44336' : '#B0BEC5';
+                        const barHeight = item.milestone ? '6px' : '20px';
+                        const barRadius = item.milestone ? '3px' : '4px';
+                        const cellWidth = 84;
+                        const leftOffset = (startIdx * cellWidth) + 2;
+                        const width = ((endIdx - startIdx + 1) * cellWidth) - 4;
+
+                        html += `<div style="position: absolute; left: ${leftOffset}px; top: ${item.milestone ? '50%' : '10px'}; width: ${width}px; height: ${barHeight}; background: ${barColor}; border-radius: ${barRadius}; opacity: 0.8; transform: ${item.milestone ? 'translateY(-50%)' : 'none'}; cursor: pointer; transition: opacity 0.2s;" title="${escapeHtml(item.title)}${item.notes ? ' - ' + item.notes : ''}">
+                            <div style="padding: 2px 4px; font-size: 10px; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.emoji || ''} ${escapeHtml(item.title)}</div>
+                        </div>`;
+                    });
+                }
+
+                html += `</div></div>`;
+            });
+
+            html += `</div>`;
+
+            // Critical Risks section
+            if (data.critical_risks && Array.isArray(data.critical_risks) && data.critical_risks.length > 0) {
+                html += '<div style="padding: 20px; border-top: 1px solid #e0e0e0; background: #fafafa;">';
+                html += '<h3 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600; color: var(--primary-color);">⚠️ CRITICAL RISKS</h3>';
+                data.critical_risks.forEach(risk => {
+                    html += `<div style="margin-bottom: 10px; padding: 10px; background: white; border-left: 3px solid #f44336; border-radius: 4px;">
+                        <div style="font-weight: 600; font-size: 12px; color: #333;">${escapeHtml(risk.title)}</div>
+                        <div style="font-size: 11px; color: #666; margin-top: 4px;">Impact: ${escapeHtml(risk.impact)}</div>
+                    </div>`;
+                });
+                html += '</div>';
+            }
+
+            // Legend
+            if (data.legend && Array.isArray(data.legend)) {
+                html += '<div style="padding: 15px 20px; border-top: 1px solid #e0e0e0; background: #f9f9f9; font-size: 12px;">';
+                html += '<div style="font-weight: 600; color: var(--primary-color); margin-bottom: 8px;">LEGEND</div>';
+                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">';
+                data.legend.forEach(item => {
+                    html += `<div style="display: flex; align-items: center; gap: 8px; font-size: 11px;">
+                        <span style="font-weight: 600; color: #666;">${escapeHtml(item.symbol)}</span>
+                        <span>${escapeHtml(item.label)}</span>
+                    </div>`;
+                });
+                html += '</div></div>';
+            }
+
+            // Footer
+            if (data.footer_note) {
+                html += `<div style="padding: 10px 20px; text-align: center; color: #999; font-size: 11px; border-top: 1px solid #e0e0e0;">
+                    ${escapeHtml(data.footer_note)}
+                </div>`;
+            }
+
+            html += '</div>';
+            outputDiv.innerHTML = html;
+        }
+
+        function renderLeanCanvasView(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output">';
+
+            // Title
+            if (data.title) {
+                html += `<h2>${escapeHtml(data.title)}</h2>`;
+            }
+
+            // Fallback if no canvas
+            if (!data.canvas) {
+                html += '<p style="color: #999; text-align: center; margin-top: 20px;">Unable to generate Lean Canvas. Displaying as Clarity View instead.</p>';
+                document.getElementById('output').innerHTML = html;
+                renderClarityView(data);
+                return;
+            }
+
+            const canvas = data.canvas;
+
+            // Helper to render section content
+            function renderSection(title, items) {
+                let section = `<div class="canvas-section"><h3>${title}</h3>`;
+                if (Array.isArray(items) && items.length > 0) {
+                    section += '<ul>';
+                    items.forEach(item => {
+                        section += `<li>${escapeHtml(item)}</li>`;
+                    });
+                    section += '</ul>';
+                } else if (typeof items === 'string' && items.trim()) {
+                    section += `<p>${escapeHtml(items)}</p>`;
+                }
+                section += '</div>';
+                return section;
+            }
+
+            // Lean Canvas Grid - 5 Columns
+            html += '<div class="lean-canvas">';
+
+            // Column 1: Problem + Existing Alternatives (combined box)
+            html += '<div class="canvas-col-1"><div class="canvas-box">';
+            html += renderSection('Problem', canvas.problem);
+            html += renderSection('Existing Alternatives', canvas.existing_alternatives);
+            html += '</div></div>';
+
+            // Column 2: Solution + Key Metrics (combined box)
+            html += '<div class="canvas-col-2"><div class="canvas-box">';
+            html += renderSection('Solution', canvas.solution);
+            html += renderSection('Key Metrics', canvas.key_metrics);
+            html += '</div></div>';
+
+            // Column 3: UVP + High-Level Concept (combined box)
+            html += '<div class="canvas-col-3"><div class="canvas-box">';
+            html += renderSection('Unique Value Proposition', canvas.unique_value_proposition);
+            html += renderSection('High-Level Concept', canvas.high_level_concept);
+            html += '</div></div>';
+
+            // Column 4: Unfair Advantage + Channels (combined box)
+            html += '<div class="canvas-col-4"><div class="canvas-box">';
+            html += renderSection('Unfair Advantage', canvas.unfair_advantage);
+            html += renderSection('Channels', canvas.channels);
+            html += '</div></div>';
+
+            // Column 5: Customer Segments + Early Adopters (combined box)
+            html += '<div class="canvas-col-5"><div class="canvas-box">';
+            html += renderSection('Customer Segments', canvas.customer_segments);
+            html += renderSection('Early Adopters', canvas.early_adopters);
+            html += '</div></div>';
+
+            // Bottom: Cost Structure | Revenue Streams
+            html += '<div class="canvas-bottom">';
+            html += '<div class="canvas-box">' + renderSection('Cost Structure', canvas.cost_structure) + '</div>';
+            html += '<div class="canvas-box">' + renderSection('Revenue Streams', canvas.revenue_streams) + '</div>';
+            html += '</div>';
+
+            html += '</div></div>';
+            outputDiv.innerHTML = html;
+        }
+
+        function toggleTodo(index) {
+            const todoItem = document.getElementById(`todo-${index}`);
+            const checkbox = todoItem.querySelector('input[type="checkbox"]');
+
+            if (checkbox.checked) {
+                todoItem.classList.add('checked');
+            } else {
+                todoItem.classList.remove('checked');
+            }
+        }
+
+        function renderEarningsSnapshot(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output">';
+
+            // Fallback if structure invalid
+            if (!data.company || !data.headline_summary) {
+                html += '<p style="color: #999; text-align: center; margin-top: 20px;">Unable to generate Earnings Snapshot. Displaying as Clarity View instead.</p>';
+                document.getElementById('output').innerHTML = html;
+                renderClarityView(data);
+                return;
+            }
+
+            // Header band
+            html += '<div style="margin-top: 20px; padding: 12px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: var(--bg-primary); text-align: center; border-radius: var(--border-radius-md); font-weight: 600; font-size: 14px;">💰 Earnings Snapshot</div>';
+
+            // Company & Period
+            html += '<div style="margin-top: 20px;">';
+            if (data.company) html += `<h2>${escapeHtml(data.company)}</h2>`;
+            if (data.period) html += `<p style="color: #666; font-size: 13px; margin-top: 4px;">Period: ${escapeHtml(data.period)}</p>`;
+            html += '</div>';
+
+            // Headline Summary
+            if (data.headline_summary && Array.isArray(data.headline_summary)) {
+                html += '<div style="margin-top: 15px; padding: 12px; background: var(--bg-secondary); border-left: 4px solid var(--primary-color); border-radius: var(--border-radius-md);"><div style="font-weight: 600; color: var(--primary-color); margin-bottom: 8px; font-size: 12px;">🎯 KEY TAKEAWAYS</div>';
+                data.headline_summary.forEach(item => {
+                    html += `<div style="font-size: 12px; color: var(--text-color); line-height: 1.5; margin-bottom: 6px; text-align: left;">• ${escapeHtml(item)}</div>`;
+                });
+                html += '</div>';
+            }
+
+            // Key Metrics (4-column grid with prominent numbers)
+            if (data.key_metrics && Array.isArray(data.key_metrics) && data.key_metrics.length > 0) {
+                html += '<div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">';
+                data.key_metrics.forEach(item => {
+                    const trendColor = item.trend === 'up' ? '#4CAF50' : item.trend === 'down' ? '#f44336' : '#888';
+                    const trendSymbol = item.trend === 'up' ? '📈' : item.trend === 'down' ? '📉' : '→';
+                    html += `<div style="padding: 14px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border: 2px solid var(--primary-color); text-align: center;">
+                        <div style="font-size: 10px; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">${escapeHtml(item.metric)}</div>
+                        <div style="font-size: 22px; font-weight: 900; color: var(--text-color); margin-bottom: 6px; line-height: 1.2;">${escapeHtml(item.value)}</div>
+                        <div style="font-size: 13px; color: ${trendColor}; font-weight: 700;">${trendSymbol} ${item.trend || 'N/A'}</div>
+                    </div>`;
+                });
+                html += '</div>';
+            }
+
+            // Financial Highlights
+            if (data.financial_highlights && Array.isArray(data.financial_highlights)) {
+                html += '<div style="margin-top: 15px; padding: 12px; background: var(--bg-secondary); border-radius: var(--border-radius-md);"><div style="font-weight: 600; color: var(--primary-color); margin-bottom: 8px; font-size: 12px;">✨ HIGHLIGHTS</div>';
+                data.financial_highlights.forEach(item => {
+                    html += `<div style="font-size: 12px; color: var(--text-color); line-height: 1.5; margin-bottom: 6px; text-align: left;">• ${escapeHtml(item)}</div>`;
+                });
+                html += '</div>';
+            }
+
+            // Drivers & Risks (side-by-side)
+            html += '<div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">';
+            if (data.drivers && Array.isArray(data.drivers)) {
+                html += '<div style="padding: 12px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border-top: 3px solid var(--primary-color);"><div style="font-weight: 600; color: var(--primary-color); margin-bottom: 8px; font-size: 12px;">🚀 PERFORMANCE DRIVERS</div>';
+                data.drivers.forEach(item => {
+                    html += `<div style="font-size: 11px; color: var(--text-color); line-height: 1.5; margin-bottom: 6px; text-align: left;">• ${escapeHtml(item)}</div>`;
+                });
+                html += '</div>';
+            }
+            if (data.risks && Array.isArray(data.risks)) {
+                html += '<div style="padding: 12px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border-top: 3px solid #f44336;"><div style="font-weight: 600; color: #f44336; margin-bottom: 8px; font-size: 12px;">⚠️ RISKS & CONCERNS</div>';
+                data.risks.forEach(item => {
+                    html += `<div style="font-size: 11px; color: var(--text-color); line-height: 1.5; margin-bottom: 6px; text-align: left;">• ${escapeHtml(item)}</div>`;
+                });
+                html += '</div>';
+            }
+            html += '</div>';
+
+            // Outlook
+            if (data.outlook && Array.isArray(data.outlook)) {
+                html += '<div style="margin-top: 15px; padding: 12px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border-top: 3px solid var(--primary-color);"><div style="font-weight: 600; color: var(--primary-color); margin-bottom: 8px; font-size: 12px;">🔮 MANAGEMENT OUTLOOK</div>';
+                data.outlook.forEach(item => {
+                    html += `<div style="font-size: 12px; color: var(--text-color); line-height: 1.5; margin-bottom: 6px; text-align: left;">• ${escapeHtml(item)}</div>`;
+                });
+                html += '</div>';
+            }
+
+            // Stock Summary
+            if (data.stock_summary) {
+                const summary = data.stock_summary;
+                html += '<div style="margin-top: 15px; padding: 12px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border-left: 4px solid var(--accent-color);"><div style="font-weight: 600; color: var(--primary-color); margin-bottom: 8px; font-size: 12px;">📊 STOCK SUMMARY</div>';
+                if (summary.price) html += `<div style="font-size: 14px; font-weight: 700; color: var(--text-color); text-align: left;">Price: ${escapeHtml(summary.price)}</div>`;
+                if (summary['5_day_trend']) html += `<div style="font-size: 12px; color: var(--text-color); margin-top: 6px; text-align: left;">5-Day Trend: <span style="font-weight: 600;">${escapeHtml(summary['5_day_trend'])}</span></div>`;
+                if (summary.commentary) html += `<div style="font-size: 12px; color: var(--text-color); margin-top: 6px; line-height: 1.5; text-align: left;">${escapeHtml(summary.commentary)}</div>`;
+                html += '</div>';
+            }
+
+            html += '</div>';
+            outputDiv.innerHTML = html;
+        }
+
+        function renderMatrixView(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output">';
+
+            // Title
+            if (data.title) {
+                html += `<h2>${escapeHtml(data.title)}</h2>`;
+            }
+
+            // Fallback if no quadrants
+            if (!data.quadrants || !Array.isArray(data.quadrants) || data.quadrants.length < 4) {
+                html += '<p style="color: #999; text-align: center; margin-top: 20px;">Unable to generate matrix view. Displaying as Clarity View instead.</p>';
+                document.getElementById('output').innerHTML = html;
+                renderClarityView(data);
+                return;
+            }
+
+            // Matrix Grid
+            html += '<div class="matrix-grid">';
+            data.quadrants.forEach((quadrant, idx) => {
+                html += '<div class="matrix-quadrant">';
+                if (quadrant.name) {
+                    html += `<h3>${escapeHtml(quadrant.name)}</h3>`;
+                }
+                if (quadrant.items && Array.isArray(quadrant.items) && quadrant.items.length > 0) {
+                    html += '<ul>';
+                    quadrant.items.forEach(item => {
+                        html += `<li>${formatBulletItem(item)}</li>`;
+                    });
+                    html += '</ul>';
+                } else {
+                    html += '<p style="color: #999; font-size: 13px; text-align: center; padding: 20px 0;">No items</p>';
+                }
+                html += '</div>';
+            });
+            html += '</div>';
+
+            html += '</div>';
+            outputDiv.innerHTML = html;
+        }
+
+        function renderNodeView(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output">';
+
+            // Title
+            if (data.title) {
+                html += `<h2>${escapeHtml(data.title)}</h2>`;
+            }
+
+            // Summary
+            if (data.summary) {
+                html += `<p>${escapeHtml(data.summary)}</p>`;
+            }
+
+            // Key Points
+            if (data.key_points && Array.isArray(data.key_points) && data.key_points.length > 0) {
+                html += '<h3 style="color: var(--primary-color); margin-top: 20px; margin-bottom: 10px;">Key Points</h3>';
+                html += '<ul style="text-align: left; padding-left: 20px;">';
+                data.key_points.forEach(point => {
+                    html += `<li style="margin-bottom: 8px;">${formatBulletItem(point)}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            // Structure Sections - Node View Layout
+            if (data.structure && Array.isArray(data.structure) && data.structure.length > 0) {
+                html += '<div style="margin-top: 30px;" class="node-view">';
+                data.structure.forEach((section, idx) => {
+                    if (section.heading) {
+                        html += '<div class="node-section">';
+                        // Heading node
+                        html += `<div class="node node-heading">${escapeHtml(section.heading)}</div>`;
+
+                        // Items with connectors
+                        if (section.items && Array.isArray(section.items) && section.items.length > 0) {
+                            section.items.forEach((item, itemIdx) => {
+                                html += '<div class="node-connector"></div>';
+                                html += `<div class="node node-item" style="text-align: left;">${formatBulletItem(item)}</div>`;
+                            });
+                        }
+                        html += '</div>';
+                    }
+                });
+                html += '</div>';
+            }
+
+            html += '</div>';
+            outputDiv.innerHTML = html;
+        }
+
+        function renderFlowchart(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output">';
+
+            if (data.title) {
+                html += `<h2>${escapeHtml(data.title)}</h2>`;
+            }
+
+            if (!data.nodes || !Array.isArray(data.nodes) || data.nodes.length === 0) {
+                html += '<p style="color: #999; text-align: center; margin-top: 20px;">Unable to generate flowchart. Displaying as Clarity View instead.</p>';
+                document.getElementById('output').innerHTML = html;
+                renderClarityView(data);
+                return;
+            }
+
+            // Container for flowchart
+            html += '<div style="margin-top: 30px; display: flex; flex-direction: column; align-items: center; padding: 20px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border: 2px solid var(--primary-color);">';
+
+            // Render each node with proper shapes
+            data.nodes.forEach((node, idx) => {
+                // Render node shape based on type
+                if (node.type === 'start' || node.type === 'end') {
+                    // Oval shape
+                    html += `<div style="border-radius: 50px; padding: 10px 20px; border: 2px solid var(--primary-color); background: var(--bg-primary); color: var(--text-color); font-weight: 600; text-align: center; width: 140px; margin: 20px 0;">${escapeHtml(node.label)}</div>`;
+                } else if (node.type === 'decision') {
+                    // Diamond shape (rotated square)
+                    html += `<div style="width: 100px; height: 100px; transform: rotate(45deg); border: 2px solid var(--primary-color); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin: 20px 0;">
+                        <div style="transform: rotate(-45deg); text-align: center; color: var(--text-color); font-weight: 600; font-size: 13px;">${escapeHtml(node.label)}</div>
+                    </div>`;
+                } else {
+                    // Rectangle (process)
+                    html += `<div style="border: 2px solid var(--primary-color); background: var(--bg-primary); color: var(--text-color); padding: 12px 20px; font-weight: 600; text-align: center; width: 160px; margin: 20px 0; border-radius: var(--border-radius-sm);">${escapeHtml(node.label)}</div>`;
+                }
+
+                // Render arrow to next node (except for last node)
+                if (idx < data.nodes.length - 1) {
+                    const nextEdge = data.edges ? data.edges.find(e => e.from === node.id) : null;
+                    const edgeLabel = nextEdge && nextEdge.label ? ` ${escapeHtml(nextEdge.label)}` : '';
+                    html += `<div style="font-size: 20px; color: var(--primary-color); font-weight: 600; margin: 5px 0;">${edgeLabel ? edgeLabel : '↓'}</div>`;
+                }
+            });
+
+            html += '</div></div>';
+            outputDiv.innerHTML = html;
+        }
+
+        function renderUmlSequence(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output">';
+
+            if (data.title) {
+                html += `<h2>${escapeHtml(data.title)}</h2>`;
+            }
+
+            if (!data.actors || !Array.isArray(data.actors) || data.actors.length === 0) {
+                html += '<p style="color: #999; text-align: center; margin-top: 20px;">Unable to generate UML sequence diagram. Displaying as Clarity View instead.</p>';
+                document.getElementById('output').innerHTML = html;
+                renderClarityView(data);
+                return;
+            }
+
+            const actorCount = data.actors.length;
+            const columnWidth = 100 / actorCount;
+            const diagramHeight = (data.messages && data.messages.length > 0) ? (data.messages.length * 60 + 100) : 200;
+
+            // Container with relative positioning
+            html += `<div style="position: relative; margin-top: 30px; padding: 20px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border: 2px solid var(--primary-color);">`;
+
+            // STEP 2: Actor row (top)
+            html += `<div style="display: flex; margin-bottom: 20px; position: relative; z-index: 10;">`;
+            data.actors.forEach((actor, idx) => {
+                html += `<div style="flex: 1; text-align: center; padding: 10px; border: 2px solid var(--primary-color); background: var(--bg-primary); border-radius: var(--border-radius-sm); font-weight: 600; color: var(--text-color);">${escapeHtml(actor)}</div>`;
+            });
+            html += `</div>`;
+
+            // STEP 3: Lifelines container with top margin to clear actor boxes
+            html += `<div style="position: relative; margin-top: 30px; min-height: ${diagramHeight}px;">`;
+
+            // Draw lifelines starting below actor boxes
+            data.actors.forEach((actor, idx) => {
+                const leftPercent = columnWidth * idx + columnWidth / 2;
+                html += `<div style="position: absolute; left: ${leftPercent}%; top: 0; bottom: 0; border-left: 2px dashed #aaa; height: 100%; z-index: 1;"></div>`;
+            });
+
+            // STEP 4 & 5: Render messages with arrows
+            if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+                let messageTop = 30;
+
+                data.messages.forEach((msg, msgIdx) => {
+                    const fromIndex = data.actors.indexOf(msg.from);
+                    const toIndex = data.actors.indexOf(msg.to);
+
+                    if (fromIndex !== -1 && toIndex !== -1) {
+                        const fromPercent = columnWidth * fromIndex + columnWidth / 2;
+                        const toPercent = columnWidth * toIndex + columnWidth / 2;
+                        const minPercent = Math.min(fromPercent, toPercent);
+                        const maxPercent = Math.max(fromPercent, toPercent);
+                        const arrowWidth = maxPercent - minPercent;
+                        const isLeftToRight = fromIndex < toIndex;
+
+                        // Message row container
+                        html += `<div style="position: absolute; top: ${messageTop}px; left: 0; right: 0; height: 60px; display: flex; align-items: center; z-index: 5;">`;
+
+                        // Arrow line
+                        html += `<div style="position: absolute; left: ${minPercent}%; width: ${arrowWidth}%; height: 2px; background: var(--primary-color); top: 20px;"></div>`;
+
+                        // Arrowhead positioned at the end of the line
+                        if (isLeftToRight) {
+                            // Right-pointing arrow at the end
+                            html += `<div style="position: absolute; left: ${maxPercent}%; transform: translateX(-100%); width: 0; height: 0; border-left: 8px solid var(--primary-color); border-top: 5px solid transparent; border-bottom: 5px solid transparent; top: 16px;"></div>`;
+                        } else {
+                            // Left-pointing arrow at the end
+                            html += `<div style="position: absolute; left: ${minPercent}%; width: 0; height: 0; border-right: 8px solid var(--primary-color); border-top: 5px solid transparent; border-bottom: 5px solid transparent; top: 16px;"></div>`;
+                        }
+
+                        // Message label
+                        const labelPercent = (minPercent + maxPercent) / 2;
+                        html += `<div style="position: absolute; left: ${labelPercent}%; transform: translateX(-50%); top: 0; background: var(--bg-primary); padding: 2px 6px; border-radius: 3px; font-size: 12px; color: var(--text-color); white-space: nowrap; border: 1px solid var(--primary-color); z-index: 10;">${escapeHtml(msg.message)}</div>`;
+
+                        html += `</div>`;
+                        messageTop += 60;
+                    }
+                });
+            }
+
+            html += `</div></div></div>`;
+            outputDiv.innerHTML = html;
+        }
+
+        function renderGoldenCircle(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output">';
+
+            if (data.title) {
+                html += `<h2>${escapeHtml(data.title)}</h2>`;
+            }
+
+            if (!data.why || !data.what || !data.how) {
+                html += '<p style="color: #999; text-align: center; margin-top: 20px;">Unable to generate Golden Circle. Displaying as Clarity View instead.</p>';
+                document.getElementById('output').innerHTML = html;
+                renderClarityView(data);
+                return;
+            }
+
+            // Golden Circle header band
+            html += '<div style="margin-top: 20px; padding: 12px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: var(--bg-primary); text-align: center; border-radius: var(--border-radius-md); font-weight: 600; font-size: 14px;">🎯 Golden Circle: Start with WHY</div>';
+
+            // Concentric circles using nested boxes
+            html += '<div style="margin-top: 30px; display: flex; flex-direction: column; align-items: center; gap: 0;">';
+
+            // WHY (innermost)
+            html += `<div style="width: 280px; padding: 20px; background: var(--primary-color); color: var(--bg-primary); border-radius: 20px; text-align: center; font-weight: 700; font-size: 13px; margin-bottom: -20px; z-index: 3; position: relative;">
+                <div style="font-size: 24px; margin-bottom: 8px;">WHY</div>
+                <div style="font-size: 12px; font-weight: 400; line-height: 1.5;">${escapeHtml(data.why)}</div>
+            </div>`;
+
+            // WHAT (middle)
+            html += `<div style="width: 360px; padding: 20px; background: rgba(102, 126, 234, 0.15); border: 2px solid var(--primary-color); border-radius: 20px; text-align: center; font-weight: 600; font-size: 13px; margin-bottom: -15px; z-index: 2; padding-top: 50px;">
+                <div style="font-size: 22px; margin-bottom: 8px; color: var(--primary-color);">WHAT</div>
+                <div style="font-size: 12px; color: var(--text-color); line-height: 1.5;">${escapeHtml(data.what)}</div>
+            </div>`;
+
+            // HOW (outermost)
+            html += `<div style="width: 440px; padding: 20px; background: var(--bg-secondary); border: 2px solid var(--primary-color); border-radius: 20px; text-align: center; font-weight: 600; font-size: 13px; z-index: 1; padding-top: 50px;">
+                <div style="font-size: 20px; margin-bottom: 8px; color: var(--primary-color);">HOW</div>
+                <div style="font-size: 12px; color: var(--text-color); line-height: 1.5;">${escapeHtml(data.how)}</div>
+            </div>`;
+
+            html += '</div></div>';
+            outputDiv.innerHTML = html;
+        }
+
+        function renderReflectiveModel(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output">';
+
+            if (data.title) {
+                html += `<h2>${escapeHtml(data.title)}</h2>`;
+            }
+
+            if (!data.what || !data.so_what || !data.now_what) {
+                html += '<p style="color: #999; text-align: center; margin-top: 20px;">Unable to generate Reflective Model. Displaying as Clarity View instead.</p>';
+                document.getElementById('output').innerHTML = html;
+                renderClarityView(data);
+                return;
+            }
+
+            // Reflective Model header band
+            html += '<div style="margin-top: 20px; padding: 12px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: var(--bg-primary); text-align: center; border-radius: var(--border-radius-md); font-weight: 600; font-size: 14px;">💭 Reflect → Learn → Act</div>';
+
+            // Three connected blocks
+            html += '<div style="margin-top: 30px; display: flex; align-items: stretch; justify-content: center; gap: 20px; flex-wrap: wrap;">';
+
+            // WHAT
+            html += `<div style="flex: 1; min-width: 200px; max-width: 240px; padding: 20px; background: var(--bg-secondary); border: 2px solid var(--primary-color); border-radius: var(--border-radius-md); text-align: center;">
+                <div style="font-size: 18px; font-weight: 700; color: var(--primary-color); margin-bottom: 12px;">WHAT</div>
+                <div style="font-size: 13px; color: var(--text-color); line-height: 1.6;">${escapeHtml(data.what)}</div>
+            </div>`;
+
+            // Arrow connector
+            html += '<div style="display: flex; align-items: center; color: var(--primary-color); font-weight: 700; font-size: 20px;">→</div>';
+
+            // SO WHAT
+            html += `<div style="flex: 1; min-width: 200px; max-width: 240px; padding: 20px; background: var(--bg-secondary); border: 2px solid var(--primary-color); border-radius: var(--border-radius-md); text-align: center;">
+                <div style="font-size: 18px; font-weight: 700; color: var(--primary-color); margin-bottom: 12px;">SO WHAT</div>
+                <div style="font-size: 13px; color: var(--text-color); line-height: 1.6;">${escapeHtml(data.so_what)}</div>
+            </div>`;
+
+            // Arrow connector
+            html += '<div style="display: flex; align-items: center; color: var(--primary-color); font-weight: 700; font-size: 20px;">→</div>';
+
+            // NOW WHAT
+            html += `<div style="flex: 1; min-width: 200px; max-width: 240px; padding: 20px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border: 2px solid var(--primary-color); border-radius: var(--border-radius-md); text-align: center;">
+                <div style="font-size: 18px; font-weight: 700; color: var(--primary-color); margin-bottom: 12px;">NOW WHAT</div>
+                <div style="font-size: 13px; color: var(--text-color); line-height: 1.6;">${escapeHtml(data.now_what)}</div>
+            </div>`;
+
+            html += '</div></div>';
+            outputDiv.innerHTML = html;
+        }
+
+        function renderBlamelessPostmortem(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output">';
+
+            // Fallback if structure invalid
+            if (!data.executive_summary || !data.detailed_summary || !data.timeline) {
+                html += '<p style="color: #999; text-align: center; margin-top: 20px;">Unable to generate Incident Postmortem. Displaying as Clarity View instead.</p>';
+                document.getElementById('output').innerHTML = html;
+                renderClarityView(data);
+                return;
+            }
+
+            // Top band
+            html += '<div style="margin-top: 20px; padding: 12px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: var(--bg-primary); text-align: center; border-radius: var(--border-radius-md); font-weight: 600; font-size: 14px;">📋 Incident Postmortem — Learn, Improve, Prevent</div>';
+
+            // Executive Summary (2-column)
+            if (data.executive_summary) {
+                html += '<div style="margin-top: 25px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">';
+                if (data.executive_summary.teams) {
+                    html += `<div style="padding: 12px; background: var(--bg-secondary); border-left: 4px solid var(--primary-color); border-radius: var(--border-radius-md);"><div style="font-weight: 600; color: var(--primary-color); font-size: 12px; margin-bottom: 6px;">TEAMS</div><div style="font-size: 12px; line-height: 1.5;">${escapeHtml(data.executive_summary.teams)}</div></div>`;
+                }
+                if (data.executive_summary.impact) {
+                    html += `<div style="padding: 12px; background: var(--bg-secondary); border-left: 4px solid var(--primary-color); border-radius: var(--border-radius-md);"><div style="font-weight: 600; color: var(--primary-color); font-size: 12px; margin-bottom: 6px;">IMPACT</div><div style="font-size: 12px; line-height: 1.5;">${escapeHtml(data.executive_summary.impact)}</div></div>`;
+                }
+                if (data.executive_summary.root_cause) {
+                    html += `<div style="padding: 12px; background: var(--bg-secondary); border-left: 4px solid var(--primary-color); border-radius: var(--border-radius-md);"><div style="font-weight: 600; color: var(--primary-color); font-size: 12px; margin-bottom: 6px;">ROOT CAUSE</div><div style="font-size: 12px; line-height: 1.5;">${escapeHtml(data.executive_summary.root_cause)}</div></div>`;
+                }
+                html += '</div>';
+            }
+
+            // Detailed Summary (full width)
+            if (data.detailed_summary) {
+                html += `<div style="margin-top: 20px; padding: 15px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border-left: 4px solid var(--primary-color);"><div style="font-weight: 600; color: var(--primary-color); margin-bottom: 10px; font-size: 13px;">DETAILED SUMMARY</div><div style="font-size: 13px; line-height: 1.6; color: var(--text-color);">${escapeHtml(data.detailed_summary)}</div></div>`;
+            }
+
+            // Timeline (vertical list)
+            if (data.timeline && Array.isArray(data.timeline) && data.timeline.length > 0) {
+                html += '<div style="margin-top: 20px;"><div style="font-weight: 600; color: var(--primary-color); margin-bottom: 12px; font-size: 13px;">TIMELINE</div>';
+                html += '<div style="padding-left: 20px; border-left: 3px solid var(--primary-color);">';
+                data.timeline.forEach(entry => {
+                    html += `<div style="margin-bottom: 12px; position: relative;">
+                        <div style="position: absolute; left: -26px; width: 10px; height: 10px; background: var(--primary-color); border-radius: 50%; border: 3px solid var(--bg-primary); top: 2px;"></div>
+                        <div style="font-weight: 600; font-size: 12px; color: var(--primary-color);">${escapeHtml(entry.time || 'T+0')}</div>
+                        <div style="font-size: 12px; color: var(--text-color); line-height: 1.5;">${escapeHtml(entry.event)}</div>
+                    </div>`;
+                });
+                html += '</div></div>';
+            }
+
+            // SEV & Impact (side-by-side)
+            html += '<div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">';
+            if (data.sev_level) {
+                html += `<div style="padding: 12px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border-top: 3px solid var(--primary-color);"><div style="font-weight: 600; color: var(--primary-color); font-size: 12px; margin-bottom: 6px;">SEVERITY LEVEL</div><div style="font-size: 12px; line-height: 1.5;">${escapeHtml(data.sev_level)}</div></div>`;
+            }
+            if (data.impact_analysis) {
+                html += `<div style="padding: 12px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border-top: 3px solid var(--primary-color);"><div style="font-weight: 600; color: var(--primary-color); font-size: 12px; margin-bottom: 6px;">IMPACT ANALYSIS</div><div style="font-size: 12px; line-height: 1.5;">${escapeHtml(data.impact_analysis)}</div></div>`;
+            }
+            html += '</div>';
+
+            // Resolution (full width)
+            if (data.resolution) {
+                html += `<div style="margin-top: 20px; padding: 15px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border-left: 4px solid var(--primary-color);"><div style="font-weight: 600; color: var(--primary-color); margin-bottom: 10px; font-size: 13px;">RESOLUTION</div><div style="font-size: 13px; line-height: 1.6; color: var(--text-color);">${escapeHtml(data.resolution)}</div></div>`;
+            }
+
+            // Root Cause Analysis (stacked WHY cards)
+            if (data.root_cause_analysis && Array.isArray(data.root_cause_analysis) && data.root_cause_analysis.length > 0) {
+                html += '<div style="margin-top: 20px;"><div style="font-weight: 600; color: var(--primary-color); margin-bottom: 12px; font-size: 13px;">ROOT CAUSE ANALYSIS (5 WHYS)</div>';
+                data.root_cause_analysis.forEach((item, idx) => {
+                    html += `<div style="margin-bottom: 12px; padding: 12px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border-left: 4px solid var(--primary-color);">
+                        <div style="font-weight: 600; font-size: 12px; color: var(--primary-color); margin-bottom: 6px;">${escapeHtml(item.why || `Why ${idx + 1}`)}</div>
+                        <div style="font-size: 12px; color: var(--text-color); line-height: 1.5;">${escapeHtml(item.explanation)}</div>
+                    </div>`;
+                });
+                html += '</div>';
+            }
+
+            // Action Items (table format)
+            if (data.action_items && Array.isArray(data.action_items) && data.action_items.length > 0) {
+                html += '<div style="margin-top: 20px;"><div style="font-weight: 600; color: var(--primary-color); margin-bottom: 12px; font-size: 13px;">ACTION ITEMS</div>';
+                html += '<div style="overflow-x: auto;">';
+                html += '<table style="width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid var(--border-color);">';
+                html += '<tr style="background: var(--bg-secondary);"><th style="padding: 10px; text-align: left; border: 1px solid var(--border-color); font-weight: 600; color: var(--primary-color);">Issue</th><th style="padding: 10px; text-align: left; border: 1px solid var(--border-color); font-weight: 600; color: var(--primary-color);">Action</th><th style="padding: 10px; text-align: left; border: 1px solid var(--border-color); font-weight: 600; color: var(--primary-color);">Owner</th><th style="padding: 10px; text-align: left; border: 1px solid var(--border-color); font-weight: 600; color: var(--primary-color);">ETA</th></tr>';
+                data.action_items.forEach(item => {
+                    html += `<tr><td style="padding: 10px; border: 1px solid var(--border-color);">${escapeHtml(item.issue)}</td><td style="padding: 10px; border: 1px solid var(--border-color);">${escapeHtml(item.action)}</td><td style="padding: 10px; border: 1px solid var(--border-color);">${escapeHtml(item.owner)}</td><td style="padding: 10px; border: 1px solid var(--border-color);">${escapeHtml(item.eta)}</td></tr>`;
+                });
+                html += '</table>';
+                html += '</div></div>';
+            }
+
+            // Discussion (2 columns)
+            if (data.discussion) {
+                html += '<div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">';
+                if (data.discussion.went_well && Array.isArray(data.discussion.went_well) && data.discussion.went_well.length > 0) {
+                    html += '<div style="padding: 15px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border-top: 3px solid var(--primary-color);"><div style="font-weight: 600; color: var(--primary-color); margin-bottom: 10px; font-size: 13px;">✓ WHAT WENT WELL</div><ul style="list-style: none; padding-left: 0; font-size: 12px;">';
+                    data.discussion.went_well.forEach(item => {
+                        html += `<li style="margin-bottom: 6px; line-height: 1.5;">• ${escapeHtml(item)}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+                if (data.discussion.improvements && Array.isArray(data.discussion.improvements) && data.discussion.improvements.length > 0) {
+                    html += '<div style="padding: 15px; background: var(--bg-secondary); border-radius: var(--border-radius-md); border-top: 3px solid var(--primary-color);"><div style="font-weight: 600; color: var(--primary-color); margin-bottom: 10px; font-size: 13px;">↗ IMPROVEMENTS</div><ul style="list-style: none; padding-left: 0; font-size: 12px;">';
+                    data.discussion.improvements.forEach(item => {
+                        html += `<li style="margin-bottom: 6px; line-height: 1.5;">• ${escapeHtml(item)}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+                html += '</div>';
+            }
+
+            html += '</div>';
+            outputDiv.innerHTML = html;
+        }
+
+        function renderTechArchDiagram(data) {
+            const outputDiv = document.getElementById('output');
+            let html = '<div class="success-output" style="background: white; padding: 0; display: flex; flex-direction: column;">';
+
+            // Title section
+            if (data.title) {
+                html += `<div style="padding: 20px 20px 10px 20px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; flex-shrink: 0;">
+                    <h2 style="margin: 0; color: white;">${escapeHtml(data.title)}</h2>`;
+                if (data.subtitle) {
+                    html += `<p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.95;">${escapeHtml(data.subtitle)}</p>`;
+                }
+                html += '</div>';
+            }
+
+            // Canvas container - Calculate actual required dimensions
+            const nodeCount = (data.nodes || []).length;
+            let maxX = 100, maxY = 100;
+
+            // Calculate bounds from node positions
+            if (data.nodes && Array.isArray(data.nodes)) {
+                data.nodes.forEach(node => {
+                    const x = node.position?.x || 0;
+                    const y = node.position?.y || 0;
+                    const width = node.style?.width || 160;
+                    const height = node.style?.height || 60;
+                    maxX = Math.max(maxX, x + width);
+                    maxY = Math.max(maxY, y + height);
+                });
+            }
+
+            // Add padding
+            const canvasWidth = maxX + 60;
+            const canvasHeight = maxY + 60;
+
+            // Canvas container - uses flexbox to ensure proper sizing
+            html += `<div style="flex: 1; display: flex; flex-direction: column; background: white; position: relative; overflow: hidden;">`;
+
+            // SVG for connections (uses viewBox for automatic scaling)
+            html += `<svg viewBox="0 0 ${canvasWidth} ${canvasHeight}" style="flex-shrink: 0; width: 100%; height: auto; min-height: 400px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.02) 0%, rgba(219, 68, 55, 0.02) 100%);">
+                <defs>
+                    <marker id="arrowSync" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                        <path d="M0,0 L0,6 L9,3 z" fill="#4285F4"/>
+                    </marker>
+                    <marker id="arrowAsync" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                        <path d="M0,0 L0,6 L9,3 z" fill="#FFA726"/>
+                    </marker>
+                </defs>`;
+
+            // Draw connections as SVG lines
+            if (data.connections && Array.isArray(data.connections)) {
+                const nodeMap = {};
+                if (data.nodes && Array.isArray(data.nodes)) {
+                    data.nodes.forEach(node => {
+                        nodeMap[node.id] = node;
+                    });
+                }
+
+                data.connections.forEach(conn => {
+                    const fromNode = nodeMap[conn.from];
+                    const toNode = nodeMap[conn.to];
+
+                    if (fromNode && toNode) {
+                        const x1 = (fromNode.position?.x || 0) + (fromNode.style?.width || 160) / 2;
+                        const y1 = (fromNode.position?.y || 0) + (fromNode.style?.height || 60) / 2;
+                        const x2 = (toNode.position?.x || 0) + (toNode.style?.width || 160) / 2;
+                        const y2 = (toNode.position?.y || 0) + (toNode.style?.height || 60) / 2;
+
+                        const isAsync = conn.type === 'async';
+                        const strokeStyle = isAsync ? '5,5' : 'none';
+                        const markerUrl = isAsync ? 'url(#arrowAsync)' : 'url(#arrowSync)';
+                        const strokeColor = isAsync ? '#FFA726' : '#4285F4';
+
+                        html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${strokeColor}" stroke-width="2" stroke-dasharray="${strokeStyle}" opacity="0.7" marker-end="${markerUrl}"/>`;
+
+                        // Add label in middle of line if present
+                        if (conn.label) {
+                            const midX = (x1 + x2) / 2;
+                            const midY = (y1 + y2) / 2;
+                            html += `<text x="${midX}" y="${midY - 8}" text-anchor="middle" font-size="11" fill="${strokeColor}" font-weight="600" style="pointer-events: none;">${escapeHtml(conn.label)}</text>`;
+                        }
+                    }
+                });
+            }
+
+            // Render nodes as SVG foreignObject (allows HTML inside SVG)
+            if (data.nodes && Array.isArray(data.nodes)) {
+                data.nodes.forEach(node => {
+                    const x = node.position?.x || 0;
+                    const y = node.position?.y || 0;
+                    const width = node.style?.width || 160;
+                    const height = node.style?.height || 60;
+                    const bgColor = node.style?.background || '#E8F0FE';
+                    const borderColor = node.style?.borderColor || '#4285F4';
+
+                    html += `<foreignObject x="${x}" y="${y}" width="${width}" height="${height}" style="overflow: visible;">
+                        <div style="
+                            width: 100%;
+                            height: 100%;
+                            background: ${bgColor};
+                            border: 2px solid ${borderColor};
+                            border-radius: 8px;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 10px;
+                            box-sizing: border-box;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                        " class="arch-node" title="${node.description || ''}">
+                            <div style="font-size: 20px; margin-bottom: 4px;">${node.emoji || '📦'}</div>
+                            <div style="font-weight: 600; font-size: 12px; text-align: center; color: #333; word-break: break-word; line-height: 1.3;">
+                                ${escapeHtml(node.label || node.id)}
+                            </div>
+                            ${node.description ? `<div style="font-size: 10px; color: #666; text-align: center; margin-top: 4px; word-break: break-word;">
+                                ${escapeHtml(node.description)}
+                            </div>` : ''}
+                        </div>
+                    </foreignObject>`;
+                });
+            }
+
+            html += '</svg></div>'; // End SVG canvas
+
+            // Legend section - placed AFTER diagram, not overlapping
+            if (data.legend && Array.isArray(data.legend) && data.legend.length > 0) {
+                html += '<div style="padding: 20px; border-top: 1px solid #e0e0e0; background: #f9f9f9; flex-shrink: 0;">';
+                html += '<div style="font-weight: 600; color: var(--primary-color); margin-bottom: 12px; font-size: 13px;">📋 LEGEND</div>';
+                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">';
+
+                data.legend.forEach(item => {
+                    html += `<div style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                        <span style="font-size: 16px;">${item.emoji || '●'}</span>
+                        <span>${escapeHtml(item.meaning || item.type)}</span>
+                    </div>`;
+                });
+
+                html += '</div></div>';
+            }
+
+            html += '</div>';
+            outputDiv.innerHTML = html;
+
+            // Add hover effects
+            document.querySelectorAll('.arch-node').forEach(node => {
+                node.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
+                    this.style.boxShadow = '0 4px 12px rgba(66, 133, 244, 0.3)';
+                });
+                node.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                    this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                });
+            });
+        }
+
+        function toggleSection(contentId, headingId) {
+            const content = document.getElementById(contentId);
+            const heading = document.getElementById(headingId);
+            const toggle = heading.querySelector('span:last-child');
+
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                toggle.textContent = '−';
+                heading.style.background = '#e8f0ff';
+            } else {
+                content.style.display = 'none';
+                toggle.textContent = '+';
+                heading.style.background = '#f0f4ff';
+            }
+        }
+
+        function clearAll() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('output').innerHTML = '<div class="empty-state"><p>Your structured insights will appear here...</p></div>';
+            document.getElementById('vizTypeBadge').innerHTML = '';
+            document.getElementById('exportButtons').style.display = 'none';
+            STATE.lastExportData = null;
+            STATE.userSelectedViz = false;
+
+            // Reset dropdown and card selection
+            const vizSelect = document.getElementById('vizType');
+            vizSelect.value = 'clarity-view';
+
+            // Reset card selection to default
+            document.querySelectorAll('.viz-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            const defaultCard = document.querySelector('[data-value="clarity-view"]');
+            if (defaultCard) {
+                defaultCard.classList.add('selected');
+            }
+
+            document.getElementById('inputText').focus();
+        }
+
+        // ========== UTILITY FUNCTIONS ==========
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Debounce function for rate-limiting event handlers
+        function debounce(func, delay) {
+            let timeoutId;
+            return function(...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => func(...args), delay);
+            };
+        }
+
+        // Parse and validate URL
+        function parseURL(urlString) {
+            try {
+                return new URL(urlString);
+            } catch (e) {
+                throw new Error('Invalid URL format');
+            }
+        }
+
+        // Convert camelCase to kebab-case
+        function camelToKebab(str) {
+            return str.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
+        }
+
+        // ========== EVENT LISTENERS ==========
+
+        // Initialize event listeners after DOM is ready
+        function initializeEventListeners() {
+            // Theme radio buttons
+            const themeRadios = document.querySelectorAll('input[name="theme"]');
+            themeRadios.forEach(radio => {
+                radio.addEventListener('change', (e) => setTheme(e.target.value));
+            });
+
+            // Input textarea
+            const inputText = document.getElementById('inputText');
+            if (inputText) {
+                inputText.addEventListener('input', () => {
+                    // Just debounce input, no recommendation fetching
+                });
+            }
+
+            // Prism button
+            const prismBtn = document.getElementById('prismBtn');
+            if (prismBtn) {
+                prismBtn.addEventListener('click', prismIt);
+            }
+
+            // Clear button
+            const clearBtn = document.getElementById('clearBtn');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', clearAll);
+            }
+
+            // Export button
+            const exportBtn = document.getElementById('exportBtn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', exportAsPDF);
+            }
+
+            // Ctrl+Enter to submit
+            inputText.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    prismIt();
+                }
+            });
+        }
+
+        // Initialize when script loads
+        initializeEventListeners();
+    </script>
+</body>
+</html>
